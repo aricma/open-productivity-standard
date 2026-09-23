@@ -1,0 +1,1 @@
+flat minimal two columns must be accepted.

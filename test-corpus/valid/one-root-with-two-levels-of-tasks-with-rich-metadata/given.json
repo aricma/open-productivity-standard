@@ -1,0 +1,48 @@
+{
+  "version": "0",
+  "id": "export-root",
+  "title": "Acme product backlog",
+  "metadata": {
+    "created_at": "2026-01-01T09:00:00Z",
+    "updated_at": "2026-07-31T18:00:00Z",
+    "url": "https://acme.example/backlog"
+  },
+  "subtasks": [
+    {
+      "id": "t1",
+      "title": "Fix memory leak in auth service",
+      "status": "open",
+      "subtasks": [
+        {
+          "id": "t1r",
+          "title": "Reproduce the leak",
+          "status": "open",
+          "metadata": {
+            "priority": "high",
+            "location": "Remote"
+          }
+        },
+        {
+          "id": "t1a",
+          "title": "Ship the fix",
+          "status": "done",
+          "metadata": {
+            "priority": "high",
+            "estimates": 3,
+            "attachments": ["notes/fix-auth.pdf"],
+            "completed_at": "2026-08-15T17:00:00Z"
+          }
+        }
+      ],
+      "metadata": {
+        "priority": "high",
+        "start_date": "2026-07-01",
+        "due_date": "2026-08-15",
+        "tags": ["infrastructure", "auth"],
+        "status": "In review",
+        "assignee": "ada"
+      }
+    }
+  ],
+  "status": "open"
+}

@@ -1,0 +1,9 @@
+{
+  "version": "0",
+  "title": "Ids must be unique across the whole graph",
+  "status": "open",
+  "subtasks": [
+    { "id": "dup", "title": "First", "status": "open" },
+    { "id": "dup", "title": "Second", "status": "open" }
+  ]
+}

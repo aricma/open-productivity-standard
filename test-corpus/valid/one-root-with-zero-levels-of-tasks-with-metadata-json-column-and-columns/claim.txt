@@ -1,0 +1,1 @@
+one root with zero levels of tasks with metadata json column and columns must be accepted.

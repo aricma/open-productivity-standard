@@ -1,0 +1,1 @@
+one root with zero levels of tasks with inferred types must be accepted.

@@ -1,0 +1,1 @@
+A nested YAML document must convert to flat JSONL without loss.

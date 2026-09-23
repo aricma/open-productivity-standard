@@ -1,0 +1,16 @@
+{
+  "title": "R",
+  "status": "open",
+  "subtasks": [
+    {
+      "id": "x",
+      "title": "A",
+      "status": "open"
+    },
+    {
+      "id": "x",
+      "title": "B",
+      "status": "open"
+    }
+  ]
+}

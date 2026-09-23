@@ -1,0 +1,12 @@
+{
+  "version": "0",
+  "title": "Work",
+  "status": "open",
+  "subtasks": [
+    {
+      "version": "0",
+      "title": "Subtasks cannot carry a version",
+      "status": "open"
+    }
+  ]
+}

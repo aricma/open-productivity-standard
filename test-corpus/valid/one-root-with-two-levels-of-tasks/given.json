@@ -1,0 +1,21 @@
+{
+  "version": "0",
+  "title": "Acme product backlog",
+  "subtasks": [
+    {
+      "title": "Fix memory leak in auth service",
+      "status": "open",
+      "subtasks": [
+        {
+          "title": "Reproduce the leak",
+          "status": "open"
+        },
+        {
+          "title": "Ship the fix",
+          "status": "done"
+        }
+      ]
+    }
+  ],
+  "status": "open"
+}

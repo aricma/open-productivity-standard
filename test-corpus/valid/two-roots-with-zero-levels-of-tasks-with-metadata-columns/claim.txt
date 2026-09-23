@@ -1,0 +1,1 @@
+two roots with zero levels of tasks with metadata columns must be accepted.

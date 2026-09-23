@@ -1,0 +1,6 @@
+id,title,status,version,notes,subtasks,created_at,updated_at,url,priority,start_date,due_date,tags,assignee,metadata_status,location,estimates,attachments,completed_at
+,Acme product backlog,open,0,"The product backlog for the Acme platform, kept in the Open Productivity Standard (OPS).","[""t1""]",2026-01-01T09:00:00Z,2026-07-31T18:00:00Z,https://acme.example/backlog,,,,,,,,,,
+t1,Fix memory leak in auth service,open,,"Today description.
+anything: else?","[""t1r"",""t1a""]",,,,high,2026-07-01,2026-08-15,"[""infrastructure"",""auth""]",ada,In review,,,,
+t1r,Reproduce the leak,open,,,,,,,high,,,,,,Remote,,,
+t1a,Ship the fix,done,,,,,,,high,,,,,,,3,"[""notes/fix-auth.pdf""]",2026-08-15T17:00:00Z

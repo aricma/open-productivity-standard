@@ -1,0 +1,1 @@
+nested minimal empty export must be accepted.

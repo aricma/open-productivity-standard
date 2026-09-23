@@ -1,0 +1,1 @@
+flat tree metadata columns must be accepted.

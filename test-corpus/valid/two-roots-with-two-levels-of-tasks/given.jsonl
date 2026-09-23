@@ -1,0 +1,6 @@
+{"title":"Work","status":"open","subtasks":["t1"]}
+{"id":"t1","title":"Fix memory leak in auth service","status":"open","subtasks":["t1r","t1a"]}
+{"id":"t1r","title":"Reproduce the leak","status":"open"}
+{"id":"t1a","title":"Ship the fix","status":"done"}
+{"title":"Personal","status":"open","subtasks":["p1"]}
+{"id":"p1","title":"Call dentist","status":"open","metadata":{"due_date":"2026-08-15"}}

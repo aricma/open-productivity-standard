@@ -1,0 +1,1 @@
+one root with zero levels of tasks with root metadata must be accepted.

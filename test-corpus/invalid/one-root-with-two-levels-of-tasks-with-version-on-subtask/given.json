@@ -1,0 +1,18 @@
+{
+  "version": "0",
+  "title": "Work",
+  "status": "open",
+  "subtasks": [
+    {
+      "title": "Level 2",
+      "status": "open",
+      "subtasks": [
+        {
+          "version": "0",
+          "title": "Subtasks cannot carry a version",
+          "status": "done"
+        }
+      ]
+    }
+  ]
+}

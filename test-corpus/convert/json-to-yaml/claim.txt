@@ -1,0 +1,1 @@
+A nested JSON document must convert to YAML without loss.

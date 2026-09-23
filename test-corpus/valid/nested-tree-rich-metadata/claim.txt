@@ -1,0 +1,1 @@
+nested tree rich metadata must be accepted.

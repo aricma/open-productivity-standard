@@ -1,0 +1,1 @@
+zero roots with zero levels of tasks with cyclic reference must be rejected.
