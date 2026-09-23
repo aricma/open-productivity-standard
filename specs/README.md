@@ -36,9 +36,9 @@ body of productivity data, across any OPS-capable tool — instead of
 rewriting them for every platform.
 
 ```text
-[ Notion ]  ──┐                               ┌──> [ Linear ]
-[ Todoist ] ──┼──> [ TASKS (the spec) ] ──┼──> [ Obsidian ]
-[ Jira ]    ──┘                               └──> [ Anything ]
+[ Notion ]  ──┐                         ┌──> [ Linear ]
+[ Todoist ] ──┼──> [ OPS (the spec) ] ──┼──> [ Obsidian ]
+[ Jira ]    ──┘                         └──> [ Anything ]
 ```
 
 ## The model in a few lines
