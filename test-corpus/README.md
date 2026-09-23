@@ -11,7 +11,8 @@ language.
 test-corpus/
 ├── valid/<case>/{claim.txt, given.<ext>}
 ├── invalid/<case>/{claim.txt, given.<ext>}
-└── convert/<case>/{claim.txt, given.<ext>, expectation.<ext>}
+├── convert/<case>/{claim.txt, given.<ext>, expectation.<ext>}
+└── roundtrips/<case>/{claim.txt, given.<ext>, expectation.<ext>}
 ```
 
 `<ext>` is the serialization: `json`, `yaml`, `jsonl`, `csv`, or `md`.
@@ -21,7 +22,7 @@ Every case directory contains:
 |---|---|---|
 | `claim.txt` | yes | one sentence describing the contract |
 | `given.<ext>` | yes | the input document; the extension names its format |
-| `expectation.<ext>` | for `convert/` | the document the input must export to |
+| `expectation.<ext>` | for `convert/`, `roundtrips/` | the document the input must export to |
 
 ## Running a case
 
@@ -34,6 +35,8 @@ Every case directory contains:
   and require the resulting model to equal the model of
   `expectation.<ext>`. The two extensions are the transformation: the same
   format is a round-trip, different formats a conversion.
+- **`roundtrips/`** — same as `convert/`, but `given` and `expectation`
+  share one format: read, write, read back, and require the same model.
 
 Comparison is semantic. The standard fixes field names and mappings, not
 key order, indentation, or trailing newline, so byte layout is not part
@@ -45,8 +48,8 @@ report how many were skipped. Skipping is not passing.
 ## Adding a case
 
 - One case per directory; the directory name is a short statement.
-- `valid/` and `convert/` hold documents that follow the rules;
-  `invalid/` holds documents that break exactly one rule.
+- `valid/`, `convert/`, and `roundtrips/` hold documents that follow the
+  rules; `invalid/` holds documents that break exactly one rule.
 - Keep fixtures small; `claim.txt` states the contract.
 
 ## Why a portable corpus

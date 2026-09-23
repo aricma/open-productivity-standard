@@ -1,0 +1,1 @@
+A flat JSONL document must round-trip through JSONL without loss.

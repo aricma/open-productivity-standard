@@ -1,0 +1,1 @@
+A nested YAML document must round-trip through YAML without loss.

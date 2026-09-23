@@ -1,0 +1,1 @@
+A flat CSV document must round-trip through CSV without loss.
