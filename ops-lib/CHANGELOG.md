@@ -30,8 +30,8 @@ interface are listed.
 ### Security
 
 - The library is safe-Rust only: `unsafe` is denied crate-wide and the
-  panic family of lints is denied, so all failure is reported through
-  `Result` and malformed input cannot crash the host process.
+  panic family of lints is denied, so failures take an explicit
+  `Result` path instead of escaping as an unhandled crash.
 - CVE fixes will be listed here as they occur; the dependency tree is
   scanned by `cargo audit` and `cargo deny` on every CI run (see
   `SECURITY.md`).
