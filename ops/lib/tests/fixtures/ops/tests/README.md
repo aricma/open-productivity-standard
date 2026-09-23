@@ -1,7 +1,7 @@
 # Tests
 
 Conformance fixtures for the OPS Specifications version 0
-([`specs/open_productivity_standard_v0.md`](../../../../../specs/open_productivity_standard_v0.md)):
+([`specs/open_productivity_standard_v0.md`](../../../../../../specs/open_productivity_standard_v0.md)):
 documents that a compliant tool must accept or reject. Write your parser
 against these states, not against guesswork.
 

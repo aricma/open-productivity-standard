@@ -1,7 +1,7 @@
 # ops-lib
 
 A Rust reader/writer for the
-[Open Productivity Standard (OPS)](../specs/open_productivity_standard_v0.md).
+[Open Productivity Standard (OPS)](../../specs/open_productivity_standard_v0.md).
 
 > **Alpha.** Nothing is released yet. The standard itself is still at
 > version `0` and may change. Expect breakage — the API and the data
@@ -31,10 +31,10 @@ A Rust reader/writer for the
 ## Repository layout
 
 This crate is one half of the OPS monorepo; the standard lives in
-[`../specs/`](../specs/).
+[`../../specs/`](../../specs/).
 
 ```
-ops-lib/
+ops/lib/
 ├── src/                 the library
 │   ├── lib.rs           facade: read/write + re-exports
 │   ├── doc/             the OpsDoc trait, one file per serialization
@@ -48,7 +48,7 @@ ops-lib/
 
 ## Local development
 
-The [maskfile](../maskfile.md) at the repo root documents every action —
+The [maskfile](../../maskfile.md) at the repo root documents every action —
 run it from the root, where `mask ci` mirrors the CI pipeline:
 
 ```sh
@@ -60,4 +60,4 @@ mask test            # cargo test
 
 ## License
 
-MIT (see the root [`LICENSE`](../LICENSE)).
+MIT (see the root [`LICENSE`](../../LICENSE)).

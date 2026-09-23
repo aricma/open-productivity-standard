@@ -1,6 +1,6 @@
 # Releasing ops-lib
 
-The `ops-lib` crate (in `ops-lib/`) is released by a manually triggered GitHub
+The `ops-lib` crate (in `ops/lib/`) is released by a manually triggered GitHub
 Actions workflow. The same pipeline can be rehearsed locally with
 `mask release`.
 
@@ -8,15 +8,16 @@ Actions workflow. The same pipeline can be rehearsed locally with
 
 On `main`, before a release:
 
-1. `version` in `ops-lib/Cargo.toml` is the version to release, in SemVer.
-2. `ops-lib/CHANGELOG.md` carries that version as its **latest** entry in
+1. `version` in `ops/lib/Cargo.toml` is the version to release, in SemVer.
+2. `ops/lib/CHANGELOG.md` carries that version as its **latest** entry in
    [Keep a Changelog](https://keepachangelog.com/) form:
 
    ```markdown
    ## [x.y.z] - YYYY-MM-DD
    ```
 
-   (the `## [Unreleased]` section sits above it).
+   (the top entry today reads `## [0.1.0] - unreleased`; set the date when
+   releasing).
 3. The repository secret `CARGO_REGISTRY_TOKEN` holds a crates.io API token
    allowed to publish `ops-lib`.
 
@@ -42,9 +43,9 @@ from `main`.
    tests, docs) followed by `.github/actions/audit` (advisories and license
    policy). Both run inline in the release job.
 2. **Release** — `scripts/release.sh`:
-   1. read `version` from `ops-lib/Cargo.toml` and log it
+   1. read `version` from `ops/lib/Cargo.toml` and log it
    2. validate it as SemVer
-   3. *(real runs only)* require `ops-lib/CHANGELOG.md`'s latest released
+   3. *(real runs only)* require `ops/lib/CHANGELOG.md`'s latest released
       version to be this version, formatted `## [x.y.z] - YYYY-MM-DD`
    4. *(real runs only)* skip publishing if this version is already on
       crates.io, otherwise `cargo publish -p ops-lib --locked`

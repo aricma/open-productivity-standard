@@ -2,4 +2,4 @@
 # the writer comparison tests compare output against these files
 # character for character, and git's CRLF conversion on Windows
 # checkouts would break them.
-ops-lib/tests/fixtures/** -text
+ops/lib/tests/fixtures/** -text

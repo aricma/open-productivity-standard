@@ -10,9 +10,9 @@ This is a monorepo:
   or the [spec README](specs/README.md) for the overview. Its
   [changelog](specs/CHANGELOG.md) and
   [decision records](specs/docs/adr/README.md) live there too.
-- [`ops-lib/`](ops-lib/) — the **reference library** (Rust), its test
+- [`ops/lib/`](ops/lib/) — the **reference library** (Rust), its test
   suite, and the standard's examples and conformance fixtures under
-  `ops-lib/tests/fixtures/ops/`. See the [lib README](ops-lib/README.md).
+  `ops/lib/tests/fixtures/ops/`. See the [lib README](ops/lib/README.md).
 
 The library's tests read the examples and fixtures directly, so the spec
 and its documents cannot drift apart unnoticed.

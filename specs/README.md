@@ -92,9 +92,9 @@ resolving the id lists — no parent references needed.
 | Best for   | trees traversals                | large exports, logs, pipe processing |
 
 Both families carry the same model — the
-[`flat-tree-id-lists.jsonl`](../ops-lib/tests/fixtures/ops/examples/flat-tree-id-lists.jsonl)
+[`flat-tree-id-lists.jsonl`](../ops/lib/tests/fixtures/ops/examples/flat-tree-id-lists.jsonl)
 and
-[`flat-tree-metadata-columns.csv`](../ops-lib/tests/fixtures/ops/examples/flat-tree-metadata-columns.csv)
+[`flat-tree-metadata-columns.csv`](../ops/lib/tests/fixtures/ops/examples/flat-tree-metadata-columns.csv)
 examples carry it side by side.
 
 ## Read order
@@ -102,10 +102,10 @@ examples carry it side by side.
 1. [`open_productivity_standard_v0.md`](open_productivity_standard_v0.md)
    — the OPS Specifications, version 0 (draft): the standard itself.
 2. [`CHANGELOG.md`](CHANGELOG.md) — the specification history.
-3. [`../ops-lib/README.md`](../ops-lib/README.md) — the reference
+3. [`../ops/lib/README.md`](../ops/lib/README.md) — the reference
    library and the test suite that keeps the standard honest.
 
 The standard's examples and conformance fixtures live in the reference
-library, under [`../ops-lib/tests/fixtures/ops/`](../ops-lib/tests/fixtures/ops/):
+library, under [`../ops/lib/tests/fixtures/ops/`](../ops/lib/tests/fixtures/ops/):
 the library's tests read them directly, so they cannot drift from the
 spec unnoticed.

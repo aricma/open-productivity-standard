@@ -1,6 +1,6 @@
 name: Release
 
-# Manual release of the `ops` crate.
+# Manual release of the `ops-lib` crate.
 #
 #   dry_run = true (default)  run CI and the release preflight, then
 #                             `cargo publish --dry-run`; publish nothing,

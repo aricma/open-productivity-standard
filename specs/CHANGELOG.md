@@ -26,12 +26,12 @@ model may change before the first release.
   pending), with the CSV and Markdown metadata decisions included.
 - Examples of every serialization, each named for what it showcases,
   now living as the reference library's fixtures under
-  `ops-lib/tests/fixtures/ops/examples/`: the shared tree in nested
+  `ops/lib/tests/fixtures/ops/examples/`: the shared tree in nested
   JSON/YAML/Markdown and flat JSONL/CSV, a minimal export, a notes-only
   task, a minimal checkbox tree, the smallest CSV, a CSV focused on
   metadata prefixes and types, and a two-root forest.
 - Conformance test fixtures, now at
-  `ops-lib/tests/fixtures/ops/tests/`: valid and invalid documents for
+  `ops/lib/tests/fixtures/ops/tests/`: valid and invalid documents for
   JSON, JSONL, YAML, CSV, and Markdown. Every invalid fixture breaks
   exactly one rule.
 - A root `TODOs.md` for work beyond v0: release v1 and restore

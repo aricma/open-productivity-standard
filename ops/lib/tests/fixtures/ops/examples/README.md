@@ -1,7 +1,7 @@
 # Examples
 
 Every file in this folder is a **valid** document per
-[`specs/open_productivity_standard_v0.md`](../../../../../specs/open_productivity_standard_v0.md).
+[`specs/open_productivity_standard_v0.md`](../../../../../../specs/open_productivity_standard_v0.md).
 These examples are the reference library's test fixtures; the standard
 itself lives in `specs/`.
 
