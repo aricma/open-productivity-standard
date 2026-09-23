@@ -271,10 +271,6 @@ Notes, metadata, and child tasks share one indentation level (two spaces
 below the task), so notes can hold any text; blank lines between content
 are cosmetic and never change nesting.
 
-All examples live with the reference library, in
-[`ops/lib/tests/fixtures/ops/examples/`](../ops/lib/tests/fixtures/ops/examples/)
-(see its `README.md` for what each file shows).
-
 ## Conformance
 
 How can software claim OPS conformance? In the following, we look at
@@ -300,9 +296,3 @@ round-trippers).
 
 Conformance never means understanding metadata. No tool is required to
 know what another tool's metadata means or to support every serialization.
-
-The fixtures in
-[`ops/lib/tests/fixtures/ops/tests/`](../ops/lib/tests/fixtures/ops/tests/)
-express rules 1–9 as concrete valid
-and invalid documents, one per rule and shape; they are the working
-definition of "valid" for implementers.

@@ -91,21 +91,13 @@ resolving the id lists — no parent references needed.
 | Memory     | whole tree in memory            | one record at a time                 |
 | Best for   | trees traversals                | large exports, logs, pipe processing |
 
-Both families carry the same model — the
-[`flat-tree-id-lists.jsonl`](../ops/lib/tests/fixtures/ops/examples/flat-tree-id-lists.jsonl)
-and
-[`flat-tree-metadata-columns.csv`](../ops/lib/tests/fixtures/ops/examples/flat-tree-metadata-columns.csv)
-examples carry it side by side.
+Both families carry the same model; a document in either can be
+converted to the other without loss.
 
 ## Read order
 
 1. [`open_productivity_standard_v0.md`](open_productivity_standard_v0.md)
    — the OPS Specifications, version 0 (draft): the standard itself.
-2. [`CHANGELOG.md`](CHANGELOG.md) — the specification history.
-3. [`../ops/lib/README.md`](../ops/lib/README.md) — the reference
-   library and the test suite that keeps the standard honest.
-
-The standard's examples and conformance fixtures live in the reference
-library, under [`../ops/lib/tests/fixtures/ops/`](../ops/lib/tests/fixtures/ops/):
-the library's tests read them directly, so they cannot drift from the
-spec unnoticed.
+2. [`adr/README.md`](adr/README.md) — the architectural
+   decision records: why the standard is the way it is.
+3. [`CHANGELOG.md`](CHANGELOG.md) — the specification history.
