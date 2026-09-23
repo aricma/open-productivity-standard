@@ -6,6 +6,9 @@ Open work for the OPS specification repo.
 - [ ] Implement CSV and Markdown support in ops-lib so their examples and fixtures are tested too (p2:e3)
 - [ ] Add the planned performance and boundary tests to ops-lib — throughput/latency per format, and oversized/malformed inputs with bounded resource use (see [ops-lib/SECURITY.md](ops-lib/SECURITY.md)) (p2:e3)
 - [ ] Decide how the specs handle flat task lists with no root task (p2:e2)
+- [ ] Restructure the Rust code under `ops/` — move `ops-lib/` to `ops/lib/` and add `ops/cli/` (p2:e2)
+- [ ] Add a CLI at `ops/cli` with a simple interface to validate and auto-fix task documents in any supported format, for CI and for AI agents (p2:e3)
+- [ ] Add a `SKILL.md` so agents can use the ops CLI to format, fix, and validate local `TODOs.md` files and convert them to any supported format (p2:e3)
 
 ## Done ✅
 - [x] Decide the Markdown metadata format: metadata is a bulleted `key: value`, notes stay plain lines (ADR-011)
