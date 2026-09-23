@@ -1,0 +1,53 @@
+name: Release
+
+# Manual release of the `ops` crate.
+#
+#   dry_run = true (default)  run CI and the release preflight, then
+#                             `cargo publish --dry-run`; publish nothing,
+#                             tag nothing, and skip the changelog check.
+#   dry_run = false           publish to crates.io, then tag main as
+#                             ops-lib/v<version>. Only runs from main.
+#
+# The release itself lives in scripts/release.sh so `mask release` can
+# rehearse the same pipeline locally.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: CI and preflight only, no publish, no tag"
+        type: boolean
+        default: true
+
+concurrency:
+  group: release-ops-lib
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release ops-lib
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: CI
+        uses: ./.github/actions/ci
+
+      - name: Audit
+        uses: ./.github/actions/audit
+
+      - name: Release
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -eu
+          if [ "$DRY_RUN" = "true" ]; then
+            scripts/release.sh --dry-run
+          else
+            scripts/release.sh --publish
+          fi

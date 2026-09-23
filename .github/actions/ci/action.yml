@@ -1,0 +1,21 @@
+name: OPS CI
+description: Format, lint, test, and document the ops workspace.
+
+runs:
+  using: composite
+  steps:
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+    - shell: bash
+      run: cargo fmt --check
+    - shell: bash
+      run: cargo check --all-targets --all-features
+    - shell: bash
+      run: cargo clippy --all-targets --all-features -- -D warnings
+    - shell: bash
+      run: cargo test --all-targets --all-features
+    - shell: bash
+      run: cargo doc --no-deps --all-features
+      env:
+        RUSTDOCFLAGS: "-D warnings"
