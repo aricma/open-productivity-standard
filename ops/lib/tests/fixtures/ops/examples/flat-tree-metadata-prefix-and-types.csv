@@ -1,3 +1,0 @@
-id,title,status,subtasks,metadata_status,metadata_estimates_number,metadata_flagged_bool,metadata_tags_json,metadata_code_string
-,Acme product backlog,open,"[""t1""]",,,,,
-t1,Ship the fix,done,,In review,3,true,"[""infrastructure"",""auth""]",3

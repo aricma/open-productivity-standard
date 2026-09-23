@@ -1,4 +1,0 @@
-{"title":"Full task model","status":"open","id":"root","version":"0","notes":"Root notes","metadata":{"active":true,"count":3,"nested":{"key":"value"},"priority":"high","tags":["infra","auth"]},"subtasks":["child-1","child-2"]}
-{"title":"Child one","status":"done","id":"child-1","notes":"Child notes","metadata":{"estimate":2},"subtasks":["grandchild"]}
-{"title":"Grandchild","status":"open","id":"grandchild","subtasks":[]}
-{"title":"Child two","status":"open","id":"child-2","subtasks":[]}
