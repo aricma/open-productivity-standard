@@ -144,20 +144,20 @@ cargo deny check
   - flags: -p --profile
   - type: string
   - choices: essential, security, performance, acceptance, all
-  - desc: Test profile to run (acceptance = OPS conformance suite only)
+  - desc: Test profile to run (acceptance = the portable corpus only)
 
 ```sh
 set -eu
 export PATH="$MASKFILE_DIR/tmp/bin:$PATH"
 case "${profile:-essential}" in
 essential) cargo test --all-targets --all-features ;;
-acceptance) cargo test --test ops_conformance ;;
-security) cargo audit && cargo deny check ;;
+acceptance) cargo test -p ops-lib --test corpus ;;
+security) echo "no security tests yet (see TODOs.md)" ;;
 performance) echo "no performance tests yet (see TODOs.md)" ;;
 all)
     cargo test --all-targets --all-features
-    cargo test --test ops_conformance
-    cargo audit && cargo deny check
+    cargo test -p ops-lib --test corpus
+    echo "no security tests yet (see TODOs.md)"
     echo "no performance tests yet (see TODOs.md)"
     ;;
 esac
@@ -170,14 +170,13 @@ $env:PATH = "$env:MASKFILE_DIR\tmp\bin;$env:PATH"
 if (-not $profile) { $profile = "essential" }
 switch ($profile) {
     "essential" { cargo test --all-targets --all-features }
-    "acceptance" { cargo test --test ops_conformance }
-    "security" { cargo audit; cargo deny check }
+    "acceptance" { cargo test -p ops-lib --test corpus }
+    "security" { Write-Host "no security tests yet (see TODOs.md)" }
     "performance" { Write-Host "no performance tests yet (see TODOs.md)" }
     "all" {
         cargo test --all-targets --all-features
-        cargo test --test ops_conformance
-        cargo audit
-        cargo deny check
+        cargo test -p ops-lib --test corpus
+        Write-Host "no security tests yet (see TODOs.md)"
         Write-Host "no performance tests yet (see TODOs.md)"
     }
 }

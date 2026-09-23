@@ -9,13 +9,15 @@ This is a monorepo:
   [specification, version 0 (draft)](specs/open_productivity_standard_v0.md),
   or the [spec README](specs/README.md) for the overview. Its
   [changelog](specs/CHANGELOG.md) and
-  [decision records](specs/docs/adr/README.md) live there too.
-- [`ops/lib/`](ops/lib/) — the **reference library** (Rust), its test
-  suite, and the standard's examples and conformance fixtures under
-  `ops/lib/tests/fixtures/ops/`. See the [lib README](ops/lib/README.md).
+  [decision records](specs/adr/README.md) live there too.
+- [`ops/lib/`](ops/lib/) — the **reference library** (Rust) and its test
+  suite. See the [lib README](ops/lib/README.md).
+- [`test-corpus/`](test-corpus/) — the **portable conformance corpus**:
+  plain-text cases any OPS implementation can run. See its
+  [README](test-corpus/README.md).
 
-The library's tests read the examples and fixtures directly, so the spec
-and its documents cannot drift apart unnoticed.
+The reference library runs `test-corpus/` in place, so the standard, the
+corpus, and the implementation cannot drift apart unnoticed.
 
 - [`TODOs.md`](TODOs.md) — open work.
 - [`docs/Release.md`](docs/Release.md) — how `ops-lib` is released.
