@@ -1,0 +1,13 @@
+# cargo-deny policy — minimal, grows when the dep tree does.
+[advisories]
+yanked = "deny"
+
+[bans]
+multiple-versions = "warn"
+
+[licenses]
+allow = [
+  "MIT",
+  "Apache-2.0",
+  "Unicode-3.0",
+]
