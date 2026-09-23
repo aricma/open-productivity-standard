@@ -1,5 +1,5 @@
-use crate::ops_model::status::Status;
-use crate::ops_model::task::Task;
+use crate::model::status::Status;
+use crate::model::task::Task;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 

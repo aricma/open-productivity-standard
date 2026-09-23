@@ -37,9 +37,9 @@ This crate is one half of the OPS monorepo; the standard lives in
 ops-lib/
 ├── src/                 the library
 │   ├── lib.rs           facade: read/write + re-exports
-│   ├── ops_doc/         the OpsDoc trait, one file per serialization
+│   ├── doc/             the OpsDoc trait, one file per serialization
 │   │                    (json, yaml, jsonl) + shared validation helpers
-│   └── ops_model/       the data model: task, status, flat_task, error
+│   └── model/           the data model: task, status, flat_task, error
 ├── tests/               integration suite (see tests/README.md)
 │   ├── common/          shared test scaffolding
 │   └── fixtures/        ops/ (the standard's documents) + local/ (ours)

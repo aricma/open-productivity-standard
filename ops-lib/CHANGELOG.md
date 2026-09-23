@@ -8,7 +8,7 @@ interface are listed.
 > **Alpha.** Nothing has been released yet. The standard is still at
 > version `0`; expect breaking changes.
 
-## [Unreleased]
+## [0.1.0] - unreleased
 
 ### Added
 
@@ -26,6 +26,12 @@ interface are listed.
   versions not among the officially released OPS versions.
 - Error handling through the `Error` enum; semantic violations carry
   a `ValidationError` payload.
+- `Error::code()` and `ValidationError::code()` return a stable,
+  library-defined rejection code — for diagnostics and the library's
+  own tests. It is not part of the OPS specification.
+- Structural violations (`missing-title`, `missing-status`,
+  `invalid-status`, `unexpected-field`, `invalid-field-type`) are
+  reported by code instead of as JSON/YAML syntax errors.
 
 ### Security
 

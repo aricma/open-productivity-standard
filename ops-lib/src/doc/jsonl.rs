@@ -2,10 +2,10 @@
 
 use super::helper::{forest, records};
 use super::helper::{validate_forest, validated_tasks};
+use super::raw::{RawTask, build_flat_task};
+use crate::doc::OpsDoc;
 use crate::error::Error;
-use crate::ops_doc::OpsDoc;
-use crate::ops_model::flat_task::FlatTask;
-use crate::ops_model::task::Task;
+use crate::model::task::Task;
 
 fn parse(input: &str) -> Result<Vec<Task>, Error> {
     let mut records_vec = Vec::new();
@@ -13,9 +13,9 @@ fn parse(input: &str) -> Result<Vec<Task>, Error> {
         if line.trim().is_empty() {
             continue;
         }
-        let record: FlatTask = serde_json::from_str(line)
+        let raw: RawTask = serde_json::from_str(line)
             .map_err(|e| Error::Json(format!("line {}: {e}", idx + 1)))?;
-        records_vec.push(record);
+        records_vec.push(build_flat_task(raw)?);
     }
     forest(records_vec)
 }

@@ -24,18 +24,18 @@ mod error;
 mod format;
 mod helpers;
 
-pub mod ops_doc;
-pub mod ops_model;
+pub mod doc;
+pub mod model;
 
-use ops_doc::OpsDoc;
+use doc::OpsDoc;
 
+pub use doc::json::Json;
+pub use doc::jsonl::Jsonl;
+pub use doc::yaml::Yaml;
 pub use error::{Error, ValidationError};
 pub use format::Format;
-pub use ops_doc::json::Json;
-pub use ops_doc::jsonl::Jsonl;
-pub use ops_doc::yaml::Yaml;
-pub use ops_model::status::Status;
-pub use ops_model::task::Task;
+pub use model::status::Status;
+pub use model::task::Task;
 
 pub fn read(format: Format, input: &str) -> Result<Vec<Task>, Error> {
     let tasks = match format {

@@ -4,10 +4,11 @@
 pub(crate) mod helper;
 pub(crate) mod json;
 pub(crate) mod jsonl;
+pub(crate) mod raw;
 pub(crate) mod yaml;
 
 use crate::error::Error;
-use crate::ops_model::task::Task;
+use crate::model::task::Task;
 
 /// The OPS document trait: the lib's core capability, implemented by
 /// every serialization format.

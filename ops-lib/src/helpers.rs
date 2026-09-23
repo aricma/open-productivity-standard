@@ -2,7 +2,7 @@
 
 use crate::config::RELEASED_VERSIONS;
 use crate::error::{Error, ValidationError};
-use crate::ops_model::task::Task;
+use crate::model::task::Task;
 
 pub(crate) fn validate_used_ops_version_against_official_releases(
     tasks: &[Task],

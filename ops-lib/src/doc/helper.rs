@@ -7,8 +7,8 @@
 //! tree).
 
 use crate::error::{Error, ValidationError};
-use crate::ops_model::flat_task::FlatTask;
-use crate::ops_model::task::Task;
+use crate::model::flat_task::FlatTask;
+use crate::model::task::Task;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
