@@ -1,0 +1,4 @@
+id,title,status,notes,subtasks,priority,due_date,metadata_status,location,estimates
+,Acme product backlog,open,,"[""t1""]",,,,,
+t1,Fix memory leak in auth service,open,,"[""t1r""]",high,2026-08-15,In review,,
+t1r,Reproduce the leak,open,,,high,,,Remote,

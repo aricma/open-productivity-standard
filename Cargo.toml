@@ -1,0 +1,3 @@
+[workspace]
+members = ["ops-lib"]
+resolver = "3"
