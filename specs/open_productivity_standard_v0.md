@@ -5,10 +5,13 @@ date: 2026-08-01
 author: Adrian Mindak (aricma) <adrian@aricma.org>
 ---
 
-# OPS Specifications
+# OPS Specifications — Version 0 (draft)
 
-This document is the **OPS Specifications**: the specification of the
-Open Productivity Standard (OPS).
+This document is **version 0** of the **OPS Specifications**: the
+specification of the Open Productivity Standard (OPS). Version 0 is a
+draft: no version of OPS is released yet, so tools should not rely on
+its stability, and any document claiming version `0` follows this
+document.
 
 A minimal, tool-agnostic data structure for exchanging tasks between
 productivity tools. Any tool can export its tasks, any other tool can
@@ -162,7 +165,7 @@ welcome.
 
 Formats fall into two families, and the use case decides which to pick:
 
-- **Tree-preserving** — JSON, YAML, Markdown, XML. `subtasks` holds
+- **Tree-preserving** — JSON, YAML, Markdown. `subtasks` holds
   nested task objects, so the graph structure is explicit and recursive
   traversal is straightforward. Best when the whole tree lives in memory
   anyway, and computation uses graph traversal algorithms for
@@ -174,8 +177,103 @@ Formats fall into two families, and the use case decides which to pick:
   data-transfer efficient, and these exist to be streamable and to
   perform local, context-based transformations in a very efficient way.
 
-All examples live in [`examples/`](examples/) (see
-[`examples/README.md`](examples/README.md) for what each file shows).
+### CSV
+
+CSV carries the flat family: one task per row. The first row is the
+header and names the columns; it is required. Column order is free, and
+this is the recommended order:
+
+`id`, `title`, `status`, `version`, `notes`, `subtasks`, `metadata`,
+then one column per metadata key.
+
+Columns come in two kinds:
+
+- **Reserved columns** are the top-level field names (`version`, `id`,
+  `title`, `status`, `notes`, `subtasks`, `metadata`) and map to the
+  model fields unchanged. The `metadata` column holds a JSON object,
+  exactly as in the model.
+- **Metadata columns** are every other column. A column names a metadata
+  key, optionally prefixed with `metadata_` and optionally suffixed with
+  a type:
+  1. Strip one leading `metadata_` prefix, if present.
+  2. If the prefix was present and the remainder ends in `_json`,
+     `_string`, `_number`, or `_bool`, that suffix names the value type
+     and is stripped.
+  3. The remainder is the metadata key. It must match rule 5's charset;
+     a document whose derived keys break it is invalid.
+
+The prefix is optional and only needed to avoid a collision — with a
+reserved column, or because the key itself starts with `metadata_`
+(such a key is written prefixed, and stripping recovers it). A column
+without the prefix is read as the literal key; a type suffix is
+recognized only on a prefixed column. One key must not be supplied
+twice.
+
+Cell values:
+
+- A prefixed column with a type suffix is read as that type. If the cell
+  cannot be read as it, it is kept as a string — reading never fails.
+- Otherwise, a cell that parses as JSON is read as that JSON value, and
+  any other cell is kept as a string. So `3` is a number, `true` is a
+  boolean, `["a","b"]` is a list, and `2026-07-01` is a string.
+- An empty cell means the key is absent, not an empty value.
+
+The `metadata` column and the metadata columns are merged; a metadata
+column overrides the same key in the `metadata` object. Any non-reserved
+column is metadata, so an unexpected column adds data instead of failing
+the read. A row without `title` or `status` is invalid (rule 1).
+`subtasks` is a JSON array of child ids, as in JSONL, and roots carry no
+id. Values containing commas, quotes, or newlines are quoted per
+RFC 4180.
+
+### Markdown
+
+Markdown is tree-preserving. Frontmatter carries the root's `version` and
+`status`. The body carries the root and every task:
+
+- The root's `title` is the first heading. Every other task is a checkbox
+  list item — `- [ ]` is `open`, `- [x]` is `done` — and the text after
+  the marker is the task's `title`.
+- A task's content is indented two spaces below its own line; the root's
+  content starts at column zero. A content line is read by its first
+  character:
+  - `- [` starts a child task.
+  - `- key: value`, with a key from rule 5's charset, is a metadata entry.
+  - any other line is a notes line, including a plain `key: value`.
+- A task's `metadata` precedes its subtasks; values are read the same way
+  as in CSV (a cell that parses as JSON is that value, anything else is a
+  string).
+
+Metadata is bulleted so it never collides with notes: a plain
+`key: value` line stays prose, and a bullet that is neither `- [ ]` nor a
+valid `- key: value` is a notes list item. Notes therefore cannot contain
+a list item shaped like a metadata entry or a task marker, and blank
+lines inside notes are not preserved. One metadata key must not appear
+twice.
+
+```markdown
+# Acme product backlog
+
+The product backlog for the Acme platform.
+
+- created_at: 2026-01-01T09:00:00Z
+- url: https://acme.example/backlog
+
+- [ ] Fix memory leak in auth service
+  Today description.
+  anything: else?
+  - priority: high
+  - [ ] Reproduce the leak
+    - location: Remote
+```
+
+Notes, metadata, and child tasks share one indentation level (two spaces
+below the task), so notes can hold any text; blank lines between content
+are cosmetic and never change nesting.
+
+All examples live with the reference library, in
+[`ops-lib/tests/fixtures/ops/examples/`](../ops-lib/tests/fixtures/ops/examples/)
+(see its `README.md` for what each file shows).
 
 ## Conformance
 
@@ -203,6 +301,8 @@ round-trippers).
 Conformance never means understanding metadata. No tool is required to
 know what another tool's metadata means or to support every serialization.
 
-The fixtures in [`tests/`](tests/) express rules 1–9 as concrete valid
+The fixtures in
+[`ops-lib/tests/fixtures/ops/tests/`](../ops-lib/tests/fixtures/ops/tests/)
+express rules 1–9 as concrete valid
 and invalid documents, one per rule and shape; they are the working
 definition of "valid" for implementers.
