@@ -5,7 +5,7 @@
 #   scripts/release.sh --publish   preflight + publish + tag ops-lib/v<version>
 #
 # Idempotent: an already published version or an existing tag is skipped, not
-# failed. Unless this is a dry run, ops/lib/CHANGELOG.md must carry the released
+# failed. Unless this is a dry run, ops/CHANGELOG.md must carry the released
 # version as its latest entry in the `## [x.y.z] - YYYY-MM-DD` format.
 set -eu
 
@@ -25,7 +25,7 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 
 CARGO_TOML="ops/lib/Cargo.toml"
-CHANGELOG="ops/lib/CHANGELOG.md"
+CHANGELOG="ops/CHANGELOG.md"
 
 # --- crate name and version, read from the manifest ------------------------
 NAME=$(awk '

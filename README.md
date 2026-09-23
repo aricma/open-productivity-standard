@@ -10,8 +10,8 @@ This is a monorepo:
   or the [spec README](specs/README.md) for the overview. Its
   [changelog](specs/CHANGELOG.md) and
   [decision records](specs/adr/README.md) live there too.
-- [`ops/lib/`](ops/lib/) — the **reference library** (Rust) and its test
-  suite. See the [lib README](ops/lib/README.md).
+- [`ops/lib/`](ops/lib/) — the **reference library** (Rust), with its
+  [tests](ops/tests/) and [README](ops/README.md) under [`ops/`](ops/).
 - [`test-corpus/`](test-corpus/) — the **portable conformance corpus**:
   plain-text cases any OPS implementation can run. See its
   [README](test-corpus/README.md).

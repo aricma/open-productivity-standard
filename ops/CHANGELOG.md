@@ -15,7 +15,7 @@ interface are listed.
 - Reader and writer for the Open Productivity Standard (OPS).
   `read(Format, &str)` parses a document into `Vec<Task>`;
   `write(Format, &[Task])` serializes it back losslessly.
-- Formats: JSON, YAML, JSONL, selected via the `Format` enum.
+- Supported formats: JSON, YAML, JSONL, selected via the `Format` enum.
 - The data model: `Task`, `Status`, `FlatTask`, with
   `Task::new(title, status)` and `Default` for the rest.
 - The `OpsDoc` trait with one unit-struct implementation per format
