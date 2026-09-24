@@ -11,3 +11,7 @@ concern:
 - `essentials/` — model-level checks that cannot be expressed as a corpus
   document: in-memory invalid models, writer idempotence, and the
   full-model round-trip.
+- `security/` — generated boundary cases for `v0::limits`, plus hostile
+  inputs (deep nesting, YAML alias bombs, malformed bytes).
+- `performance/` — read/write time across scales per format, with an
+  O(N) scaling assertion; run via `mask test --profile performance`.

@@ -25,6 +25,10 @@ A Rust reader/writer for the
   Layout matters where a format depends on it (Markdown indentation,
   CSV quoting, YAML nesting), and the writer emits one stable, minimal
   form.
+- **Bounded**: explicit resource guardrails (`ops_lib::v0::limits`) cap
+  document size, task count, nesting depth, and field and metadata sizes,
+  so hostile input is rejected with a coded error instead of exhausting
+  memory or the stack.
 
 ## Repository layout
 

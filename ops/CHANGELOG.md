@@ -23,6 +23,10 @@ interface are listed.
   rejects invalid in-memory models — duplicate ids, metadata keys
   outside `^[a-z0-9_]{3,}$`, version declared on a subtask, and
   versions not among the officially released OPS versions.
+- Resource guardrails: `v0::limits` publishes the document, task,
+  depth, child, field, and metadata size limits, and over-limit input is
+  rejected with a coded `ValidationError::LimitExceeded` (for example
+  `nesting-too-deep`) instead of exhausting memory or the stack.
 - Error handling through the `Error` enum; semantic violations carry
   a `ValidationError` payload.
 - `Error::code()` and `ValidationError::code()` return a stable,

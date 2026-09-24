@@ -51,17 +51,37 @@ run (locally via `mask build`, which includes the audit step):
 Dependabot is planned to open automated update PRs so the audit stays
 green proactively rather than reactively.
 
-## Performance and boundary tests (planned)
+## Resource limits and boundary tests
 
-We intend to test the library's limits so its CPU and RAM behavior is
-known and bounded:
+The library enforces explicit, documented guardrails so a document
+cannot make it allocate without bound or recurse until it crashes.
+These are **ops-lib policy, not part of the OPS standard**: another
+implementation may choose different numbers, and a document over one of
+these is rejected here, not declared non-conformant.
 
-- **Performance tests** — throughput and latency baselines for reading
-  and writing large documents, per format.
-- **Boundary tests** — oversized inputs (very deep nesting, very many
-  records, huge metadata values, maximum line lengths), malformed
-  encodings, and extreme-but-valid documents, asserting bounded
-  resource use and no crashes.
+| Guardrail | Value |
+|---|---|
+| whole document | 16 MiB |
+| tasks per document | 100 000 |
+| nesting depth (root = 0) | 256 |
+| subtasks per task | 10 000 |
+| title | 1 024 bytes |
+| notes | 65 536 bytes |
+| id | 256 bytes |
+| version | 16 bytes |
+| metadata entries per task | 64 |
+| metadata key | 64 bytes |
+| metadata value, serialized | 65 536 bytes |
 
-Until those land, CI gates on tests, clippy, docs, and the audit —
-not on runtime resource bounds.
+Each is a constant in `lib/v0/limits.rs` with a comment explaining the
+number. Over-limit input is rejected with `ValidationError::LimitExceeded`
+and a stable `code()` (`nesting-too-deep`, `field-too-long`, …), never a
+panic or an abort. `read` checks the document size before parsing and the
+structural limits while building; `write` runs the same validation before
+serializing, so a deep in-memory tree is rejected instead of overflowing
+the stack.
+
+The limits are covered by `tests/security/` (generated boundary cases,
+including the deep-chain and deep-write regressions) and
+`tests/performance/` (read/write scaling with an O(N) tripwire), run by
+`mask test --profile security` and `mask test --profile performance`.
