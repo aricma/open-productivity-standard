@@ -9,6 +9,7 @@
 use super::helpers::{child, string_field, wrong_type};
 use super::validators::common;
 use crate::v0::error::Error;
+use crate::v0::limits::{Limit, check};
 use crate::v0::model::flat_task::FlatTask;
 use crate::v0::model::status::Status;
 use crate::v0::model::task::Task;
@@ -42,13 +43,24 @@ pub(super) struct Common {
 impl RawTask {
     /// Convert one tree task from its lenient raw form (nested `subtasks`).
     pub(crate) fn to_task(&self) -> Result<Task, Error> {
+        let mut count = 0;
+        self.build_tree(0, &mut count)
+    }
+
+    fn build_tree(&self, depth: usize, count: &mut usize) -> Result<Task, Error> {
+        check(Limit::Depth, depth).map_err(Error::Validation)?;
         let common = common(self)?;
+        *count += 1;
+        check(Limit::Tasks, *count).map_err(Error::Validation)?;
         let subtasks = match &self.subtasks {
             None => Vec::new(),
-            Some(Value::Array(items)) => items
-                .iter()
-                .map(|value| child(value)?.to_task())
-                .collect::<Result<Vec<Task>, Error>>()?,
+            Some(Value::Array(items)) => {
+                check(Limit::Children, items.len()).map_err(Error::Validation)?;
+                items
+                    .iter()
+                    .map(|value| child(value)?.build_tree(depth + 1, count))
+                    .collect::<Result<Vec<Task>, Error>>()?
+            }
             Some(_) => return Err(wrong_type("subtasks", "an array")),
         };
         Ok(Task {
@@ -68,10 +80,13 @@ impl RawTask {
         let common = common(self)?;
         let subtasks = match &self.subtasks {
             None => Vec::new(),
-            Some(Value::Array(items)) => items
-                .iter()
-                .map(|item| string_field(item, "subtask id"))
-                .collect::<Result<Vec<String>, Error>>()?,
+            Some(Value::Array(items)) => {
+                check(Limit::Children, items.len()).map_err(Error::Validation)?;
+                items
+                    .iter()
+                    .map(|item| string_field(item, "subtask id"))
+                    .collect::<Result<Vec<String>, Error>>()?
+            }
             Some(_) => return Err(wrong_type("subtasks", "an array of ids")),
         };
         Ok(FlatTask {

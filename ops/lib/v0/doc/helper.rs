@@ -7,6 +7,7 @@
 //! as a tree).
 
 use crate::v0::error::{Error, ValidationError};
+use crate::v0::limits::{Limit, check};
 use crate::v0::model::flat_task::FlatTask;
 use crate::v0::model::task::Task;
 use regex::Regex;
@@ -21,7 +22,16 @@ fn valid_metadata_key(key: &str) -> bool {
     METADATA_KEY_PATTERN.is_match(key)
 }
 
-fn walk(task: &Task, depth: usize, ids: &mut HashSet<String>) -> Result<(), ValidationError> {
+fn walk(
+    task: &Task,
+    depth: usize,
+    ids: &mut HashSet<String>,
+    count: &mut usize,
+) -> Result<(), ValidationError> {
+    check(Limit::Depth, depth)?;
+    *count += 1;
+    check(Limit::Tasks, *count)?;
+    check(Limit::Children, task.subtasks.len())?;
     if let Some(metadata) = &task.metadata {
         for key in metadata.keys() {
             if !valid_metadata_key(key) {
@@ -38,16 +48,18 @@ fn walk(task: &Task, depth: usize, ids: &mut HashSet<String>) -> Result<(), Vali
         return Err(ValidationError::VersionOnSubtask(task.title.clone()));
     }
     for child in &task.subtasks {
-        walk(child, depth + 1, ids)?;
+        walk(child, depth + 1, ids, count)?;
     }
     Ok(())
 }
 
-/// Validate an in-memory forest against the semantic rules.
+/// Validate an in-memory forest against the semantic rules and the
+/// structural guardrails.
 pub(crate) fn validate_forest(tasks: &[Task]) -> Result<(), ValidationError> {
     let mut ids = HashSet::new();
+    let mut count = 0;
     for t in tasks {
-        walk(t, 0, &mut ids)?;
+        walk(t, 0, &mut ids, &mut count)?;
     }
     Ok(())
 }
@@ -82,6 +94,7 @@ pub fn flatten(task: &Task, out: &mut Vec<FlatTask>) {
 /// cycles (a collection with no root is a cycle), `version` on roots
 /// only.
 pub fn forest(records: Vec<FlatTask>) -> Result<Vec<Task>, Error> {
+    check(Limit::Tasks, records.len()).map_err(Error::Validation)?;
     let n = records.len();
     let mut by_id: HashMap<String, usize> = HashMap::new();
     for (i, r) in records.iter().enumerate() {
@@ -125,7 +138,7 @@ pub fn forest(records: Vec<FlatTask>) -> Result<Vec<Task>, Error> {
     let mut roots = Vec::new();
     for (i, is_root) in referenced.iter().enumerate() {
         if !*is_root {
-            roots.push(build_tree(&records, &children, i)?);
+            roots.push(build_tree(&records, &children, i, 0)?);
         }
     }
     if !records.is_empty() && roots.is_empty() {
@@ -134,7 +147,13 @@ pub fn forest(records: Vec<FlatTask>) -> Result<Vec<Task>, Error> {
     Ok(roots)
 }
 
-fn build_tree(records: &[FlatTask], children: &[Vec<usize>], i: usize) -> Result<Task, Error> {
+fn build_tree(
+    records: &[FlatTask],
+    children: &[Vec<usize>],
+    i: usize,
+    depth: usize,
+) -> Result<Task, Error> {
+    check(Limit::Depth, depth).map_err(Error::Validation)?;
     let r = &records[i];
     let mut task = Task {
         title: r.title.clone(),
@@ -146,7 +165,8 @@ fn build_tree(records: &[FlatTask], children: &[Vec<usize>], i: usize) -> Result
         ..Default::default()
     };
     for &j in &children[i] {
-        task.subtasks.push(build_tree(records, children, j)?);
+        task.subtasks
+            .push(build_tree(records, children, j, depth + 1)?);
     }
     Ok(task)
 }

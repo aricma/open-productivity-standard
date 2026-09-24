@@ -46,11 +46,14 @@ pub fn read(format: Format, input: &str) -> Result<Vec<Task>, Error> {
             [task] => vec![task.to_task()?],
             _ => return Err(Error::SingleRootExpected(format.name().to_string())),
         },
-        Format::Jsonl => forest(
-            raw.iter()
-                .map(RawTask::to_flat_task)
-                .collect::<Result<Vec<_>, Error>>()?,
-        )?,
+        Format::Jsonl => {
+            check(Limit::Tasks, raw.len()).map_err(Error::Validation)?;
+            forest(
+                raw.iter()
+                    .map(RawTask::to_flat_task)
+                    .collect::<Result<Vec<_>, Error>>()?,
+            )?
+        }
     };
     validate_forest(&tasks).map_err(Error::Validation)?;
     version::check_released_versions(&tasks)?;
