@@ -29,3 +29,7 @@ path = "tests/essentials/main.rs"
 [[test]]
 name = "security"
 path = "tests/security/main.rs"
+
+[[test]]
+name = "performance"
+path = "tests/performance/main.rs"

@@ -185,13 +185,13 @@ $MASK gen-corpus
 case "${profile:-essential}" in
 essential) cargo test --lib --test essentials ;;
 acceptance) cargo test -p ops-lib --test acceptance ;;
-security) echo "no security tests yet (see TODOs.md)" ;;
-performance) echo "no performance tests yet (see TODOs.md)" ;;
+security) cargo test -p ops-lib --test security ;;
+performance) cargo test -p ops-lib --test performance -- --nocapture ;;
 all)
     cargo test --lib --test essentials
     cargo test -p ops-lib --test acceptance
-    echo "no security tests yet (see TODOs.md)"
-    echo "no performance tests yet (see TODOs.md)"
+    cargo test -p ops-lib --test security
+    cargo test -p ops-lib --test performance -- --nocapture
     ;;
 esac
 ```
@@ -205,13 +205,13 @@ if (-not $profile) { $profile = "essential" }
 switch ($profile) {
     "essential" { cargo test --lib --test essentials }
     "acceptance" { cargo test -p ops-lib --test acceptance }
-    "security" { Write-Host "no security tests yet (see TODOs.md)" }
-    "performance" { Write-Host "no performance tests yet (see TODOs.md)" }
+    "security" { cargo test -p ops-lib --test security }
+    "performance" { cargo test -p ops-lib --test performance -- --nocapture }
     "all" {
         cargo test --lib --test essentials
         cargo test -p ops-lib --test acceptance
-        Write-Host "no security tests yet (see TODOs.md)"
-        Write-Host "no performance tests yet (see TODOs.md)"
+        cargo test -p ops-lib --test security
+        cargo test -p ops-lib --test performance -- --nocapture
     }
 }
 ```
