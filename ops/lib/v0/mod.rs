@@ -14,6 +14,7 @@
 
 mod error;
 mod format;
+pub mod limits;
 mod version;
 
 pub(crate) mod doc;
