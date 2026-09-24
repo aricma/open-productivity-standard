@@ -142,6 +142,15 @@ impl Limit {
     }
 }
 
+/// Rejects `got` when it is over `limit`.
+pub(crate) fn check(limit: Limit, got: usize) -> Result<(), crate::v0::error::ValidationError> {
+    if got > limit.max() {
+        Err(crate::v0::error::ValidationError::LimitExceeded { limit, got })
+    } else {
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

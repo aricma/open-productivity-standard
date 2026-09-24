@@ -25,6 +25,7 @@ use doc::helper::{forest, validate_forest};
 use doc::json::Json;
 use doc::jsonl::Jsonl;
 use doc::yaml::Yaml;
+use limits::{Limit, check};
 use model::raw_task::RawTask;
 
 pub use error::{Error, ValidationError};
@@ -34,6 +35,7 @@ pub use model::task::Task;
 
 /// Imports a version-0 OPS document in `format` into valid tasks.
 pub fn read(format: Format, input: &str) -> Result<Vec<Task>, Error> {
+    check(Limit::InputBytes, input.len()).map_err(Error::Validation)?;
     let raw = match format {
         Format::Json => Json.parse(input)?,
         Format::Yaml => Yaml.parse(input)?,
