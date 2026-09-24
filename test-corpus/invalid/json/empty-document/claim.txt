@@ -1,0 +1,1 @@
+an empty document is not a task.

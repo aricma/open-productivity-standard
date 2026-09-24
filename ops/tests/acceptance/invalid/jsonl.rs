@@ -22,6 +22,16 @@ fn duplicate_id() {
 
 #[rustfmt::skip]
 #[test]
+fn jsonl_record_not_an_object() {
+    let given = include_str!("../../../../test-corpus/invalid/jsonl/jsonl-record-not-an-object/given.jsonl");
+    assert!(
+        ops_lib::v0::read(ops_lib::v0::Format::Jsonl, given).is_err(),
+        "invalid/jsonl/jsonl-record-not-an-object: must be rejected — a JSONL record must be a task object."
+    );
+}
+
+#[rustfmt::skip]
+#[test]
 fn malformed() {
     let given = include_str!("../../../../test-corpus/invalid/jsonl/malformed/given.jsonl");
     assert!(

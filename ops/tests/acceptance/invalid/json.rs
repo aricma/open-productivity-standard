@@ -12,6 +12,16 @@ fn duplicate_id() {
 
 #[rustfmt::skip]
 #[test]
+fn empty_document() {
+    let given = include_str!("../../../../test-corpus/invalid/json/empty-document/given.json");
+    assert!(
+        ops_lib::v0::read(ops_lib::v0::Format::Json, given).is_err(),
+        "invalid/json/empty-document: must be rejected — an empty document is not a task."
+    );
+}
+
+#[rustfmt::skip]
+#[test]
 fn malformed() {
     let given = include_str!("../../../../test-corpus/invalid/json/malformed/given.json");
     assert!(
@@ -127,6 +137,26 @@ fn one_root_with_zero_levels_of_tasks_with_subtasks_not_an_array() {
     assert!(
         ops_lib::v0::read(ops_lib::v0::Format::Json, given).is_err(),
         "invalid/json/one-root-with-zero-levels-of-tasks-with-subtasks-not-an-array: must be rejected — one root with zero levels of tasks with subtasks not an array must be rejected."
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn top_level_array() {
+    let given = include_str!("../../../../test-corpus/invalid/json/top-level-array/given.json");
+    assert!(
+        ops_lib::v0::read(ops_lib::v0::Format::Json, given).is_err(),
+        "invalid/json/top-level-array: must be rejected — a tree document is a single task, not an array."
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn trailing_garbage() {
+    let given = include_str!("../../../../test-corpus/invalid/json/trailing-garbage/given.json");
+    assert!(
+        ops_lib::v0::read(ops_lib::v0::Format::Json, given).is_err(),
+        "invalid/json/trailing-garbage: must be rejected — content after the JSON document is not allowed."
     );
 }
 

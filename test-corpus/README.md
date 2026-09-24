@@ -9,8 +9,8 @@ language.
 
 ```text
 test-corpus/
-├── valid/<case>/{claim.txt, given.<ext>}
-├── invalid/<case>/{claim.txt, given.<ext>}
+├── valid/<format>/<case>/{claim.txt, given.<ext>}
+├── invalid/<format>/<case>/{claim.txt, given.<ext>}
 ├── convert/<case>/{claim.txt, given.<ext>, expectation.<ext>}
 └── roundtrips/<case>/{claim.txt, given.<ext>, expectation.<ext>}
 ```
