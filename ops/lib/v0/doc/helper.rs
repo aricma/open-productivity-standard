@@ -1,14 +1,14 @@
 //! Shared helpers for the serialization implementations: the semantic
-//! validation gate every parser runs, plus the flat-format machinery
-//! (records are one task per line/row, hierarchy is expressed by
-//! child-id lists, and the tree is rebuilt by resolving them — shared
-//! children, missing references, and cycles are rejected here, since a
-//! flat document with a broken graph cannot even be represented as a
-//! tree).
+//! validation the facade runs, the tree-format write constraint, and the
+//! flat-format machinery (records are one task per line/row, hierarchy is
+//! expressed by child-id lists, and the tree is rebuilt by resolving them
+//! — shared children, missing references, and cycles are rejected here,
+//! since a flat document with a broken graph cannot even be represented
+//! as a tree).
 
-use crate::error::{Error, ValidationError};
-use crate::model::flat_task::FlatTask;
-use crate::model::task::Task;
+use crate::v0::error::{Error, ValidationError};
+use crate::v0::model::flat_task::FlatTask;
+use crate::v0::model::task::Task;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
@@ -52,11 +52,12 @@ pub(crate) fn validate_forest(tasks: &[Task]) -> Result<(), ValidationError> {
     Ok(())
 }
 
-/// Semantic gate used by the format parsers: parsing never returns an
-/// invalid forest.
-pub(crate) fn validated_tasks(tasks: Vec<Task>) -> Result<Vec<Task>, Error> {
-    validate_forest(&tasks).map_err(Error::Validation)?;
-    Ok(tasks)
+/// Tree-preserving formats hold exactly one root per document.
+pub(crate) fn single_root<'a>(tasks: &'a [Task], format: &str) -> Result<&'a Task, Error> {
+    match tasks {
+        [t] => Ok(t),
+        _ => Err(Error::SingleRootExpected(format.to_string())),
+    }
 }
 
 /// Flatten a task tree into records (pre-order, root first).

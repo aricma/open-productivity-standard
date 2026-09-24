@@ -11,47 +11,18 @@
 //!
 //! Spec: <https://github.com/aricma/open-productivity-spec>
 //!
-//! Implements the OPS task model (one `task` type, nested arbitrarily
-//! deep) and these serializations:
+//! The standard is versioned, and so is this crate: each OPS version
+//! lives in its own module, and a document is read with the module for
+//! the version it follows. [`v0`] is the only one today.
 //!
-//! - tree-preserving: JSON, YAML
-//! - flat/streamable: JSONL
+//! ```no_run
+//! use ops_lib::v0::{self, Format};
 //!
-//! CSV and Markdown are specced but not implemented yet.
+//! let tasks = v0::read(Format::Json, "{\"title\": \"t\", \"status\": \"open\"}")?;
+//! let json = v0::write(Format::Json, &tasks)?;
+//! # Ok::<(), ops_lib::v0::Error>(())
+//! ```
 
-mod config;
-mod error;
-mod format;
-mod helpers;
+pub mod v0;
 
-pub mod doc;
-pub mod model;
-
-use doc::OpsDoc;
-
-pub use doc::json::Json;
-pub use doc::jsonl::Jsonl;
-pub use doc::yaml::Yaml;
-pub use error::{Error, ValidationError};
-pub use format::Format;
-pub use model::status::Status;
-pub use model::task::Task;
-
-pub fn read(format: Format, input: &str) -> Result<Vec<Task>, Error> {
-    let tasks = match format {
-        Format::Json => Json.parse(input)?,
-        Format::Yaml => Yaml.parse(input)?,
-        Format::Jsonl => Jsonl.parse(input)?,
-    };
-    helpers::validate_used_ops_version_against_official_releases(&tasks)?;
-    Ok(tasks)
-}
-
-pub fn write(format: Format, tasks: &[Task]) -> Result<String, Error> {
-    helpers::validate_used_ops_version_against_official_releases(tasks)?;
-    match format {
-        Format::Json => Json.write(tasks),
-        Format::Yaml => Yaml.write(tasks),
-        Format::Jsonl => Jsonl.write(tasks),
-    }
-}
+mod shared;

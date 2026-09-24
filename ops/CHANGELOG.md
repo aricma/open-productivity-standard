@@ -12,14 +12,13 @@ interface are listed.
 
 ### Added
 
-- Reader and writer for the Open Productivity Standard (OPS).
-  `read(Format, &str)` parses a document into `Vec<Task>`;
-  `write(Format, &[Task])` serializes it back losslessly.
+- Reader and writer for the Open Productivity Standard (OPS),
+  namespaced by spec version: `v0::read(Format, &str)` parses a document
+  into `Vec<Task>`; `v0::write(Format, &[Task])` serializes it back
+  losslessly. A future OPS version gets its own module.
 - Supported formats: JSON, YAML, JSONL, selected via the `Format` enum.
-- The data model: `Task`, `Status`, `FlatTask`, with
+- The version-0 data model: `v0::Task` and `v0::Status`, with
   `Task::new(title, status)` and `Default` for the rest.
-- The `OpsDoc` trait with one unit-struct implementation per format
-  (`Json`, `Yaml`, `Jsonl`) for direct, format-typed use.
 - Validation on both paths: `read` rejects invalid documents, `write`
   rejects invalid in-memory models — duplicate ids, metadata keys
   outside `^[a-z0-9_]{3,}$`, version declared on a subtask, and

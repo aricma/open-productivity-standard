@@ -2,7 +2,7 @@
 //! portable corpus — building an invalid in-memory model, the full-model
 //! round-trip, and writer determinism.
 
-use ops_lib::{Format, Status, Task};
+use ops_lib::v0::{Format, Status, Task};
 use serde_json::{Map, Value, json};
 
 fn meta(value: Value) -> Map<String, Value> {
@@ -52,9 +52,9 @@ fn full_model() -> Task {
 #[test]
 fn full_model_roundtrips_through_every_format() {
     for format in [Format::Json, Format::Yaml, Format::Jsonl] {
-        let out = ops_lib::write(format, &[full_model()]).unwrap();
+        let out = ops_lib::v0::write(format, &[full_model()]).unwrap();
         assert_eq!(
-            ops_lib::read(format, &out).unwrap(),
+            ops_lib::v0::read(format, &out).unwrap(),
             vec![full_model()],
             "{} round-trip changed the model",
             format.name()
@@ -65,8 +65,8 @@ fn full_model_roundtrips_through_every_format() {
 #[test]
 fn writing_is_deterministic() {
     for format in [Format::Json, Format::Yaml, Format::Jsonl] {
-        let first = ops_lib::write(format, &[full_model()]).unwrap();
-        let second = ops_lib::write(format, &[full_model()]).unwrap();
+        let first = ops_lib::v0::write(format, &[full_model()]).unwrap();
+        let second = ops_lib::v0::write(format, &[full_model()]).unwrap();
         assert_eq!(
             first,
             second,
@@ -126,11 +126,11 @@ fn invalid_models_are_rejected_before_writing() {
         ),
     ];
     for (tasks, code) in invalid {
-        let err = ops_lib::write(Format::Json, &tasks).unwrap_err();
+        let err = ops_lib::v0::write(Format::Json, &tasks).unwrap_err();
         assert_eq!(err.code(), code);
     }
     for format in [Format::Json, Format::Yaml] {
-        let err = ops_lib::write(format, &forest).unwrap_err();
+        let err = ops_lib::v0::write(format, &forest).unwrap_err();
         assert_eq!(err.code(), "single-root-expected");
     }
 }

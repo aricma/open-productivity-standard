@@ -14,6 +14,9 @@ A Rust reader/writer for the
   tasks back out, losslessly — the round-trip contract is tested against
   the portable corpus, read in place, so the spec and the library cannot
   drift apart unnoticed.
+- **Versioned by spec**: the API is namespaced by OPS version
+  (`ops_lib::v0`), so the next version lands beside v0 without breaking
+  callers that pin the old one.
 - **Validates** on both sides: parsing never returns an invalid forest,
   and in-memory models are checked before serializing (duplicate ids,
   metadata key charset, version placement and released versions).
@@ -27,10 +30,15 @@ This crate is one half of the OPS monorepo; the standard lives in
 ops/
 ├── Cargo.toml           the crate manifest
 ├── lib/                 the library (source only)
-│   ├── lib.rs           facade: read/write + re-exports
-│   ├── doc/             the OpsDoc trait, one file per serialization
-│   │                    (json, yaml, jsonl) + shared validation helpers
-│   └── model/           the data model: task, status, flat_task, error
+│   ├── lib.rs           crate root: the versioned public surface
+│   ├── shared/          helpers shared by every spec version
+│   │   └── version.rs   the official release list + version check
+│   └── v0/              the version-0 implementation
+│       ├── mod.rs       read/write + the published types
+│       ├── version.rs   applies the shared release check to v0 tasks
+│       ├── doc/         the OpsDoc trait + one file per serialization
+│       │                (json, yaml, jsonl); reads/writes raw_task
+│       └── model/       the data model: task, status, flat_task, raw_task
 ├── tests/               integration tests
 │   ├── corpus.rs        the runner over ../test-corpus
 │   └── model.rs         model-level checks not expressible as corpus files

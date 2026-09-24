@@ -1,4 +1,4 @@
-use crate::model::status::Status;
+use crate::v0::model::status::Status;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 

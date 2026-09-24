@@ -16,7 +16,7 @@
 //!
 //! Formats the crate does not implement are skipped and counted.
 
-use ops_lib::Format;
+use ops_lib::v0::Format;
 use std::path::{Path, PathBuf};
 
 /// `../test-corpus`, resolved independently of the working directory.
@@ -179,13 +179,13 @@ fn convert_cases_roundtrip_semantically() {
         let format = format.expect("output cases are supported");
         let given = text(&case.given);
         let expected = text(path);
-        let tasks = ops_lib::read(given_format, &given)
+        let tasks = ops_lib::v0::read(given_format, &given)
             .unwrap_or_else(|e| panic!("{}: given rejected: {e}", case.name));
-        let out = ops_lib::write(format, &tasks)
+        let out = ops_lib::v0::write(format, &tasks)
             .unwrap_or_else(|e| panic!("{}: write failed: {e}", case.name));
-        let produced = ops_lib::read(format, &out)
+        let produced = ops_lib::v0::read(format, &out)
             .unwrap_or_else(|e| panic!("{}: output rejected: {e}", case.name));
-        let wanted = ops_lib::read(format, &expected)
+        let wanted = ops_lib::v0::read(format, &expected)
             .unwrap_or_else(|e| panic!("{}: expectation rejected: {e}", case.name));
         assert_eq!(
             produced, wanted,
@@ -202,7 +202,7 @@ fn valid_documents_are_accepted() {
             continue;
         }
         let given_format = case.given_format.expect("valid cases are supported");
-        ops_lib::read(given_format, &text(&case.given))
+        ops_lib::v0::read(given_format, &text(&case.given))
             .unwrap_or_else(|e| panic!("{}: must be accepted — {}: {e}", case.name, case.claim));
     }
 }
@@ -215,7 +215,7 @@ fn invalid_documents_fail() {
         }
         let given_format = case.given_format.expect("invalid cases are supported");
         assert!(
-            ops_lib::read(given_format, &text(&case.given)).is_err(),
+            ops_lib::v0::read(given_format, &text(&case.given)).is_err(),
             "{}: must be rejected — {}",
             case.name,
             case.claim

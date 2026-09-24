@@ -60,7 +60,7 @@ impl fmt::Display for ValidationError {
             ValidationError::UnknownOPSVersion(v) => write!(
                 f,
                 "version `{v}` is not a released OPS version (known: {})",
-                crate::config::RELEASED_VERSIONS.join(", ")
+                crate::shared::version::RELEASED_VERSIONS.join(", ")
             ),
             ValidationError::InvalidMetadataKey(key) => {
                 write!(f, "metadata key `{key}` breaks ^[a-z0-9_]{{3,}}$")

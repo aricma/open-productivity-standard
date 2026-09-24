@@ -1,5 +1,5 @@
-use crate::model::status::Status;
-use crate::model::task::Task;
+use crate::v0::model::status::Status;
+use crate::v0::model::task::Task;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
@@ -16,8 +16,8 @@ pub struct FlatTask {
     pub notes: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub metadata: Option<Map<String, Value>>,
-    #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub subtasks: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub subtasks: Vec<String>,
 }
 
 impl FlatTask {
@@ -29,11 +29,11 @@ impl FlatTask {
             version: task.version.clone(),
             notes: task.notes.clone(),
             metadata: task.metadata.clone(),
-            subtasks: Some(task.subtasks.iter().filter_map(|c| c.id.clone()).collect()),
+            subtasks: task.subtasks.iter().filter_map(|c| c.id.clone()).collect(),
         }
     }
 
     pub fn child_ids(&self) -> &[String] {
-        self.subtasks.as_deref().unwrap_or(&[])
+        &self.subtasks
     }
 }
