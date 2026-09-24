@@ -104,3 +104,115 @@ fn depth_guard_on_in_memory_write() {
     let err = v0::write(Format::Json, &[deep(MAX_DEPTH + 2)]).unwrap_err();
     assert_eq!(err.code(), "nesting-too-deep");
 }
+
+#[test]
+fn title_guard() {
+    let ok = format!(
+        r#"{{"title":"{}","status":"open"}}"#,
+        "x".repeat(MAX_TITLE_BYTES)
+    );
+    assert!(v0::read(Format::Json, &ok).is_ok());
+    rejected(
+        &format!(
+            r#"{{"title":"{}","status":"open"}}"#,
+            "x".repeat(MAX_TITLE_BYTES + 1)
+        ),
+        Format::Json,
+        "field-too-long",
+    );
+}
+
+#[test]
+fn notes_guard() {
+    let ok = format!(
+        r#"{{"title":"t","status":"open","notes":"{}"}}"#,
+        "x".repeat(MAX_NOTES_BYTES)
+    );
+    assert!(v0::read(Format::Json, &ok).is_ok());
+    rejected(
+        &format!(
+            r#"{{"title":"t","status":"open","notes":"{}"}}"#,
+            "x".repeat(MAX_NOTES_BYTES + 1)
+        ),
+        Format::Json,
+        "field-too-long",
+    );
+}
+
+#[test]
+fn id_guard() {
+    let ok = format!(
+        r#"{{"id":"{}","title":"t","status":"open"}}"#,
+        "x".repeat(MAX_ID_BYTES)
+    );
+    assert!(v0::read(Format::Json, &ok).is_ok());
+    rejected(
+        &format!(
+            r#"{{"id":"{}","title":"t","status":"open"}}"#,
+            "x".repeat(MAX_ID_BYTES + 1)
+        ),
+        Format::Json,
+        "field-too-long",
+    );
+}
+
+#[test]
+fn version_guard() {
+    let ok = r#"{"version":"0","title":"t","status":"open"}"#;
+    assert!(v0::read(Format::Json, ok).is_ok());
+    rejected(
+        &format!(
+            r#"{{"version":"{}","title":"t","status":"open"}}"#,
+            "x".repeat(MAX_VERSION_BYTES + 1)
+        ),
+        Format::Json,
+        "field-too-long",
+    );
+}
+
+fn metadata_doc(pairs: &str) -> String {
+    format!(r#"{{"title":"t","status":"open","metadata":{{{pairs}}}}}"#)
+}
+
+#[test]
+fn metadata_pair_count_guard() {
+    let pairs = |n: usize| {
+        (0..n)
+            .map(|i| format!(r#""k{i:03}":1"#))
+            .collect::<Vec<_>>()
+            .join(",")
+    };
+    assert!(v0::read(Format::Json, &metadata_doc(&pairs(MAX_METADATA_PAIRS))).is_ok());
+    rejected(
+        &metadata_doc(&pairs(MAX_METADATA_PAIRS + 1)),
+        Format::Json,
+        "too-many-metadata-pairs",
+    );
+}
+
+#[test]
+fn metadata_key_guard() {
+    let entry = |len: usize| format!(r#""{}":1"#, "a".repeat(len));
+    assert!(v0::read(Format::Json, &metadata_doc(&entry(MAX_METADATA_KEY_BYTES))).is_ok());
+    rejected(
+        &metadata_doc(&entry(MAX_METADATA_KEY_BYTES + 1)),
+        Format::Json,
+        "metadata-key-too-long",
+    );
+}
+
+#[test]
+fn metadata_value_guard() {
+    // A JSON string's serialized size is its content plus two quotes.
+    let value = |n: usize| format!(r#""{}""#, "x".repeat(n));
+    let at = metadata_doc(&format!(
+        r#""blob":{}"#,
+        value(MAX_METADATA_VALUE_BYTES - 2)
+    ));
+    assert!(v0::read(Format::Json, &at).is_ok());
+    let over = metadata_doc(&format!(
+        r#""blob":{}"#,
+        value(MAX_METADATA_VALUE_BYTES - 1)
+    ));
+    rejected(&over, Format::Json, "metadata-value-too-large");
+}

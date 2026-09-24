@@ -7,7 +7,7 @@
 //! as a tree).
 
 use crate::v0::error::{Error, ValidationError};
-use crate::v0::limits::{Limit, check};
+use crate::v0::limits::{Limit, check, metadata_value_bytes};
 use crate::v0::model::flat_task::FlatTask;
 use crate::v0::model::task::Task;
 use regex::Regex;
@@ -32,11 +32,24 @@ fn walk(
     *count += 1;
     check(Limit::Tasks, *count)?;
     check(Limit::Children, task.subtasks.len())?;
+    check(Limit::Title, task.title.len())?;
+    if let Some(notes) = &task.notes {
+        check(Limit::Notes, notes.len())?;
+    }
+    if let Some(id) = &task.id {
+        check(Limit::Id, id.len())?;
+    }
+    if let Some(version) = &task.version {
+        check(Limit::Version, version.len())?;
+    }
     if let Some(metadata) = &task.metadata {
-        for key in metadata.keys() {
+        check(Limit::MetadataPairs, metadata.len())?;
+        for (key, value) in metadata {
             if !valid_metadata_key(key) {
                 return Err(ValidationError::InvalidMetadataKey(key.clone()));
             }
+            check(Limit::MetadataKey, key.len())?;
+            check(Limit::MetadataValue, metadata_value_bytes(value))?;
         }
     }
     if let Some(id) = &task.id

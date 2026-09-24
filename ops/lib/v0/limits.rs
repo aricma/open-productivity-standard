@@ -151,6 +151,26 @@ pub(crate) fn check(limit: Limit, got: usize) -> Result<(), crate::v0::error::Va
     }
 }
 
+/// The serialized size of a metadata value, without allocating a copy.
+pub(crate) fn metadata_value_bytes(value: &serde_json::Value) -> usize {
+    struct Counter(usize);
+    impl std::io::Write for Counter {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.0 += buf.len();
+            Ok(buf.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    let mut counter = Counter(0);
+    match serde_json::to_writer(&mut counter, value) {
+        Ok(()) => counter.0,
+        Err(_) => usize::MAX,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -183,5 +203,12 @@ mod tests {
         assert_eq!(Limit::MetadataPairs.code(), "too-many-metadata-pairs");
         assert_eq!(Limit::MetadataKey.code(), "metadata-key-too-long");
         assert_eq!(Limit::MetadataValue.code(), "metadata-value-too-large");
+    }
+
+    #[test]
+    fn metadata_value_bytes_counts_serialized_size() {
+        assert_eq!(metadata_value_bytes(&serde_json::json!("abc")), 5);
+        assert_eq!(metadata_value_bytes(&serde_json::json!(3)), 1);
+        assert_eq!(metadata_value_bytes(&serde_json::json!([1, 2])), 5);
     }
 }
