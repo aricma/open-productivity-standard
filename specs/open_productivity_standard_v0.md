@@ -20,10 +20,11 @@ import them.
 ## The model
 
 One type: the **task**. A task may contain other tasks, nested
-arbitrarily deep. An export is one or more root tasks; every task descends
-from exactly one root. There are no other concepts — no epics, features,
-backlog items, or lists. What a platform calls a task is carried in
-`metadata`.
+arbitrarily deep. An export is a **forest**: zero or more root tasks, each
+the root of a tree; every task descends from exactly one root or is one.
+A flat list with no root is simply a forest whose roots are the top-level
+tasks. There are no other concepts — no epics, features, backlog items, or
+lists. What a platform calls a task is carried in `metadata`.
 
 ## Design goals
 
