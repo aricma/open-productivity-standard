@@ -4,10 +4,8 @@
 //! The task model (one task type, nested arbitrarily deep) and these
 //! serializations:
 //!
-//! - tree-preserving: JSON, YAML
-//! - flat/streamable: JSONL
-//!
-//! CSV and Markdown are specced but not implemented yet.
+//! - tree-preserving: JSON, YAML, Markdown
+//! - flat/streamable: JSONL, CSV
 //!
 //! Version 0 is the only version; a future version gets its own module
 //! and does not disturb this one.
@@ -21,9 +19,11 @@ pub(crate) mod doc;
 pub(crate) mod model;
 
 use doc::OpsDoc;
+use doc::csv::Csv;
 use doc::helper::{forest, validate_forest};
 use doc::json::Json;
 use doc::jsonl::Jsonl;
+use doc::md::Md;
 use doc::yaml::Yaml;
 use limits::{Limit, check};
 use model::raw_task::RawTask;
@@ -40,13 +40,15 @@ pub fn read(format: Format, input: &str) -> Result<Vec<Task>, Error> {
         Format::Json => Json.parse(input)?,
         Format::Yaml => Yaml.parse(input)?,
         Format::Jsonl => Jsonl.parse(input)?,
+        Format::Csv => Csv.parse(input)?,
+        Format::Md => Md.parse(input)?,
     };
     let tasks = match format {
-        Format::Json | Format::Yaml => match raw.as_slice() {
+        Format::Json | Format::Yaml | Format::Md => match raw.as_slice() {
             [task] => vec![task.to_task()?],
             _ => return Err(Error::SingleRootExpected(format.name().to_string())),
         },
-        Format::Jsonl => {
+        Format::Jsonl | Format::Csv => {
             check(Limit::Tasks, raw.len()).map_err(Error::Validation)?;
             forest(
                 raw.iter()
@@ -68,5 +70,7 @@ pub fn write(format: Format, tasks: &[Task]) -> Result<String, Error> {
         Format::Json => Json.write(tasks),
         Format::Yaml => Yaml.write(tasks),
         Format::Jsonl => Jsonl.write(tasks),
+        Format::Csv => Csv.write(tasks),
+        Format::Md => Md.write(tasks),
     }
 }

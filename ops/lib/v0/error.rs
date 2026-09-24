@@ -7,6 +7,8 @@ pub enum Error {
     SingleRootExpected(String),
     Json(String),
     Yaml(String),
+    Csv(String),
+    Md(String),
 }
 
 impl fmt::Display for Error {
@@ -18,6 +20,8 @@ impl fmt::Display for Error {
             }
             Error::Json(e) => write!(f, "invalid JSON: {e}"),
             Error::Yaml(e) => write!(f, "invalid YAML: {e}"),
+            Error::Csv(e) => write!(f, "invalid CSV: {e}"),
+            Error::Md(e) => write!(f, "invalid Markdown: {e}"),
         }
     }
 }
@@ -129,7 +133,7 @@ impl Error {
         match self {
             Self::Validation(v) => v.code(),
             Self::SingleRootExpected(_) => "single-root-expected",
-            Self::Json(_) | Self::Yaml(_) => "invalid-syntax",
+            Self::Json(_) | Self::Yaml(_) | Self::Csv(_) | Self::Md(_) => "invalid-syntax",
         }
     }
 }
@@ -195,6 +199,12 @@ mod tests {
             .code(),
             "nesting-too-deep"
         );
+    }
+
+    #[test]
+    fn syntax_errors_share_one_code() {
+        assert_eq!(Error::Csv("x".into()).code(), "invalid-syntax");
+        assert_eq!(Error::Md("x".into()).code(), "invalid-syntax");
     }
 
     #[test]

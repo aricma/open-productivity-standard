@@ -17,7 +17,7 @@ use serde::Deserialize;
 use serde_json::{Map, Value};
 
 /// One task as it appears on the wire.
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub(crate) struct RawTask {
     pub(super) title: Option<Value>,
     pub(super) status: Option<Value>,

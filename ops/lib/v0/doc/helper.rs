@@ -18,7 +18,7 @@ use std::sync::LazyLock;
 static METADATA_KEY_PATTERN: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^[a-z0-9_]{3,}$").expect("static pattern is valid"));
 
-fn valid_metadata_key(key: &str) -> bool {
+pub(crate) fn valid_metadata_key(key: &str) -> bool {
     METADATA_KEY_PATTERN.is_match(key)
 }
 

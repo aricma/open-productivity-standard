@@ -1,9 +1,12 @@
 //! The serialization layer: the [`OpsDoc`] trait in its own module, one
-//! module per format (`json`, `yaml`, `jsonl`), and shared helpers.
+//! module per format (`json`, `yaml`, `jsonl`, `csv`, `md`), and shared
+//! helpers.
 
+pub(crate) mod csv;
 pub(crate) mod helper;
 pub(crate) mod json;
 pub(crate) mod jsonl;
+pub(crate) mod md;
 pub(crate) mod ops_doc;
 pub(crate) mod yaml;
 
