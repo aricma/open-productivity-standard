@@ -216,3 +216,46 @@ fn metadata_value_guard() {
     ));
     rejected(&over, Format::Json, "metadata-value-too-large");
 }
+
+#[test]
+fn deeply_nested_tree_documents_are_rejected() {
+    let mut doc = String::new();
+    for _ in 0..1_000 {
+        doc.push_str(r#"{"title":"t","status":"open","subtasks":["#);
+    }
+    doc.push_str(r#"{"title":"t","status":"open"}"#);
+    for _ in 0..1_000 {
+        doc.push_str("]}");
+    }
+    assert!(v0::read(Format::Json, &doc).is_err());
+    assert!(v0::read(Format::Yaml, &doc).is_err());
+}
+
+#[test]
+fn yaml_alias_bomb_is_rejected() {
+    let mut doc = String::from("a: &a [\"x\"]\n");
+    let mut prev = "a".to_string();
+    for i in 0..10 {
+        let name = format!("b{i}");
+        let refs = std::iter::repeat_n(format!("*{prev}"), 4)
+            .collect::<Vec<_>>()
+            .join(",");
+        doc.push_str(&format!("{name}: &{name} [{refs}]\n"));
+        prev = name;
+    }
+    assert!(v0::read(Format::Yaml, &doc).is_err());
+}
+
+#[test]
+fn malformed_json_is_rejected() {
+    let valid = r#"{"title":"t","status":"open"}"#;
+    let bad = [
+        format!("\u{feff}{valid}"),
+        format!("{valid} trailing"),
+        format!("{valid}\u{0}"),
+        "{".to_string(),
+    ];
+    for input in bad {
+        assert!(v0::read(Format::Json, &input).is_err(), "{input:?}");
+    }
+}
