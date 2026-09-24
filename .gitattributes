@@ -1,0 +1,5 @@
+# The corpus is a portable artifact and is embedded into the generated tests
+# with `include_str!`; the generated tests are byte-compared by
+# `gen-corpus --check`. Pin LF on every platform so both are canonical.
+test-corpus/** text eol=lf
+ops/tests/acceptance/** text eol=lf

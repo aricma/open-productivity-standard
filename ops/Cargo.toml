@@ -19,9 +19,9 @@ serde_json = "1"
 serde_yaml = "0.9"
 
 [[test]]
-name = "corpus"
-path = "tests/corpus.rs"
+name = "acceptance"
+path = "tests/acceptance/main.rs"
 
 [[test]]
-name = "model"
-path = "tests/model.rs"
+name = "essentials"
+path = "tests/essentials/main.rs"

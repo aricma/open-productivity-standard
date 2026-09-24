@@ -134,6 +134,38 @@ cargo audit
 cargo deny check
 ```
 
+## gen-corpus
+
+> Regenerate `ops/tests/acceptance/` from `test-corpus/`. Pass --check to verify only.
+
+**OPTIONS**
+
+- check
+  - flags: --check
+  - desc: Fail if the committed generated tests are out of date; write nothing
+
+```sh
+set -eu
+export PATH="$MASKFILE_DIR/tmp/bin:$PATH"
+if [ "${check:-}" = "true" ]; then
+    cargo run -q -p gen-corpus -- --check
+else
+    cargo run -q -p gen-corpus
+fi
+```
+
+```powershell
+$ErrorActionPreference = "Stop"
+$PSNativeCommandUseErrorActionPreference = $true
+$env:PATH = "$env:MASKFILE_DIR\tmp\bin;$env:PATH"
+if ($check) {
+    cargo run -q -p gen-corpus -- --check
+}
+else {
+    cargo run -q -p gen-corpus
+}
+```
+
 ## test
 
 > Run the test suite for a profile.
@@ -149,14 +181,15 @@ cargo deny check
 ```sh
 set -eu
 export PATH="$MASKFILE_DIR/tmp/bin:$PATH"
+$MASK gen-corpus
 case "${profile:-essential}" in
-essential) cargo test --all-targets --all-features ;;
-acceptance) cargo test -p ops-lib --test corpus ;;
+essential) cargo test --lib --test essentials ;;
+acceptance) cargo test -p ops-lib --test acceptance ;;
 security) echo "no security tests yet (see TODOs.md)" ;;
 performance) echo "no performance tests yet (see TODOs.md)" ;;
 all)
-    cargo test --all-targets --all-features
-    cargo test -p ops-lib --test corpus
+    cargo test --lib --test essentials
+    cargo test -p ops-lib --test acceptance
     echo "no security tests yet (see TODOs.md)"
     echo "no performance tests yet (see TODOs.md)"
     ;;
@@ -167,15 +200,16 @@ esac
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 $env:PATH = "$env:MASKFILE_DIR\tmp\bin;$env:PATH"
+& $env:MASK gen-corpus; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 if (-not $profile) { $profile = "essential" }
 switch ($profile) {
-    "essential" { cargo test --all-targets --all-features }
-    "acceptance" { cargo test -p ops-lib --test corpus }
+    "essential" { cargo test --lib --test essentials }
+    "acceptance" { cargo test -p ops-lib --test acceptance }
     "security" { Write-Host "no security tests yet (see TODOs.md)" }
     "performance" { Write-Host "no performance tests yet (see TODOs.md)" }
     "all" {
-        cargo test --all-targets --all-features
-        cargo test -p ops-lib --test corpus
+        cargo test --lib --test essentials
+        cargo test -p ops-lib --test acceptance
         Write-Host "no security tests yet (see TODOs.md)"
         Write-Host "no performance tests yet (see TODOs.md)"
     }
@@ -195,13 +229,14 @@ switch ($profile) {
   - desc: Profile passed to the test step
 
 ```sh
-$MASK format && $MASK build && $MASK test --profile "${test_profile:-all}"
+$MASK format && $MASK build && $MASK gen-corpus --check && $MASK test --profile "${test_profile:-all}"
 ```
 
 ```powershell
 $selected = if ($test_profile) { $test_profile } else { "all" }
 & $env:MASK format; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 & $env:MASK build; if ($LASTEXITCODE) { exit $LASTEXITCODE }
+& $env:MASK gen-corpus --check; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 & $env:MASK test --profile $selected; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 ```
 

@@ -1,3 +1,3 @@
 [workspace]
-members = ["ops"]
+members = ["ops", "tools/gen-corpus"]
 resolver = "3"

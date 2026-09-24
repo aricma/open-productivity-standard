@@ -10,6 +10,8 @@ runs:
     - shell: bash
       run: cargo fmt --check
     - shell: bash
+      run: cargo run -q -p gen-corpus -- --check
+    - shell: bash
       run: cargo check --all-targets --all-features
     - shell: bash
       run: cargo clippy --all-targets --all-features -- -D warnings

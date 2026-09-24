@@ -1,0 +1,9 @@
+[package]
+name = "gen-corpus"
+version = "0.0.0"
+edition = "2024"
+publish = false
+license = "MIT"
+description = "Generate ops/tests/acceptance from test-corpus"
+
+[dependencies]
