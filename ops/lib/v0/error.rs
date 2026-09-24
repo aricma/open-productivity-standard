@@ -1,3 +1,4 @@
+use crate::v0::limits::Limit;
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -41,6 +42,10 @@ pub enum ValidationError {
         expected: &'static str,
     },
     DuplicateMetadataKey(String),
+    LimitExceeded {
+        limit: Limit,
+        got: usize,
+    },
 }
 
 impl fmt::Display for ValidationError {
@@ -79,6 +84,13 @@ impl fmt::Display for ValidationError {
             ValidationError::DuplicateMetadataKey(key) => {
                 write!(f, "metadata key `{key}` is supplied twice")
             }
+            ValidationError::LimitExceeded { limit, got } => write!(
+                f,
+                "{} is {got} {}; the limit is {}",
+                limit.name(),
+                limit.unit(),
+                limit.max()
+            ),
         }
     }
 }
@@ -104,6 +116,7 @@ impl ValidationError {
             Self::UnexpectedField(_) => "unexpected-field",
             Self::InvalidFieldType { .. } => "invalid-field-type",
             Self::DuplicateMetadataKey(_) => "duplicate-metadata-key",
+            Self::LimitExceeded { limit, .. } => limit.code(),
         }
     }
 }
@@ -174,6 +187,23 @@ mod tests {
             ValidationError::InvalidMetadataKey("A".into()).code(),
             "invalid-metadata-key"
         );
+        assert_eq!(
+            ValidationError::LimitExceeded {
+                limit: crate::v0::limits::Limit::Depth,
+                got: 257,
+            }
+            .code(),
+            "nesting-too-deep"
+        );
+    }
+
+    #[test]
+    fn limit_errors_name_the_limit_and_the_value() {
+        let err = ValidationError::LimitExceeded {
+            limit: crate::v0::limits::Limit::Title,
+            got: 1025,
+        };
+        assert_eq!(err.to_string(), "title is 1025 bytes; the limit is 1024");
     }
 
     #[test]
