@@ -28,6 +28,8 @@ fn format_variant(ext: &str) -> Option<&'static str> {
         "json" => "Json",
         "yaml" | "yml" => "Yaml",
         "jsonl" | "ndjson" => "Jsonl",
+        "csv" => "Csv",
+        "md" | "markdown" => "Md",
         _ => return None,
     })
 }

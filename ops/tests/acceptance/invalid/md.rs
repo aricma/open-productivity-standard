@@ -2,20 +2,40 @@
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
-fn one_root_with_one_level_of_tasks_with_empty_title() {}
+fn one_root_with_one_level_of_tasks_with_empty_title() {
+    let given = include_str!("../../../../test-corpus/invalid/md/one-root-with-one-level-of-tasks-with-empty-title/given.md");
+    assert!(
+        ops_lib::v0::read(ops_lib::v0::Format::Md, given).is_err(),
+        "invalid/md/one-root-with-one-level-of-tasks-with-empty-title: must be rejected — one root with one level of tasks with empty title must be rejected."
+    );
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
-fn one_root_with_zero_levels_of_tasks_with_duplicate_metadata_key() {}
+fn one_root_with_zero_levels_of_tasks_with_duplicate_metadata_key() {
+    let given = include_str!("../../../../test-corpus/invalid/md/one-root-with-zero-levels-of-tasks-with-duplicate-metadata-key/given.md");
+    assert!(
+        ops_lib::v0::read(ops_lib::v0::Format::Md, given).is_err(),
+        "invalid/md/one-root-with-zero-levels-of-tasks-with-duplicate-metadata-key: must be rejected — one root with zero levels of tasks with duplicate metadata key must be rejected."
+    );
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
-fn one_root_with_zero_levels_of_tasks_with_invalid_status() {}
+fn one_root_with_zero_levels_of_tasks_with_invalid_status() {
+    let given = include_str!("../../../../test-corpus/invalid/md/one-root-with-zero-levels-of-tasks-with-invalid-status/given.md");
+    assert!(
+        ops_lib::v0::read(ops_lib::v0::Format::Md, given).is_err(),
+        "invalid/md/one-root-with-zero-levels-of-tasks-with-invalid-status: must be rejected — one root with zero levels of tasks with invalid status must be rejected."
+    );
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
-fn one_root_with_zero_levels_of_tasks_with_missing_status() {}
+fn one_root_with_zero_levels_of_tasks_with_missing_status() {
+    let given = include_str!("../../../../test-corpus/invalid/md/one-root-with-zero-levels-of-tasks-with-missing-status/given.md");
+    assert!(
+        ops_lib::v0::read(ops_lib::v0::Format::Md, given).is_err(),
+        "invalid/md/one-root-with-zero-levels-of-tasks-with-missing-status: must be rejected — one root with zero levels of tasks with missing status must be rejected."
+    );
+}

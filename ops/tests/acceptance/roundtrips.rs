@@ -2,8 +2,22 @@
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn csv_to_csv() {}
+fn csv_to_csv() {
+    let given = include_str!("../../../test-corpus/roundtrips/csv-to-csv/given.csv");
+    let expected = include_str!("../../../test-corpus/roundtrips/csv-to-csv/expectation.csv");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("roundtrips/csv-to-csv: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Csv, &tasks)
+        .unwrap_or_else(|e| panic!("roundtrips/csv-to-csv: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Csv, &out)
+        .unwrap_or_else(|e| panic!("roundtrips/csv-to-csv: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Csv, expected)
+        .unwrap_or_else(|e| panic!("roundtrips/csv-to-csv: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "roundtrips/csv-to-csv: A flat CSV document must round-trip through CSV without loss. (the exported model differs from the expectation)"
+    );
+}
 
 #[rustfmt::skip]
 #[test]
@@ -45,8 +59,22 @@ fn jsonl_to_jsonl() {
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
-fn md_to_md() {}
+fn md_to_md() {
+    let given = include_str!("../../../test-corpus/roundtrips/md-to-md/given.md");
+    let expected = include_str!("../../../test-corpus/roundtrips/md-to-md/expectation.md");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Md, given)
+        .unwrap_or_else(|e| panic!("roundtrips/md-to-md: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Md, &tasks)
+        .unwrap_or_else(|e| panic!("roundtrips/md-to-md: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Md, &out)
+        .unwrap_or_else(|e| panic!("roundtrips/md-to-md: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Md, expected)
+        .unwrap_or_else(|e| panic!("roundtrips/md-to-md: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "roundtrips/md-to-md: A Markdown checkbox tree must round-trip through Markdown without loss. (the exported model differs from the expectation)"
+    );
+}
 
 #[rustfmt::skip]
 #[test]

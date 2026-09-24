@@ -2,60 +2,96 @@
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn flat_forest_metadata_json_and_columns() {}
+fn flat_forest_metadata_json_and_columns() {
+    let given = include_str!("../../../../test-corpus/valid/csv/flat-forest-metadata-json-and-columns/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("valid/csv/flat-forest-metadata-json-and-columns: must be accepted — flat forest metadata json and columns must be accepted.: {e}"));
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn flat_minimal_two_columns() {}
+fn flat_minimal_two_columns() {
+    let given = include_str!("../../../../test-corpus/valid/csv/flat-minimal-two-columns/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("valid/csv/flat-minimal-two-columns: must be accepted — flat minimal two columns must be accepted.: {e}"));
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn flat_tree_metadata_columns() {}
+fn flat_tree_metadata_columns() {
+    let given = include_str!("../../../../test-corpus/valid/csv/flat-tree-metadata-columns/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("valid/csv/flat-tree-metadata-columns: must be accepted — flat tree metadata columns must be accepted.: {e}"));
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn flat_tree_metadata_prefix_and_types() {}
+fn flat_tree_metadata_prefix_and_types() {
+    let given = include_str!("../../../../test-corpus/valid/csv/flat-tree-metadata-prefix-and-types/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("valid/csv/flat-tree-metadata-prefix-and-types: must be accepted — flat tree metadata prefix and types must be accepted.: {e}"));
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn one_open_root_with_zero_levels_of_tasks() {}
+fn one_open_root_with_zero_levels_of_tasks() {
+    let given = include_str!("../../../../test-corpus/valid/csv/one-open-root-with-zero-levels-of-tasks/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("valid/csv/one-open-root-with-zero-levels-of-tasks: must be accepted — one open root with zero levels of tasks must be accepted.: {e}"));
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn one_root_with_two_levels_of_tasks_with_metadata_columns() {}
+fn one_root_with_two_levels_of_tasks_with_metadata_columns() {
+    let given = include_str!("../../../../test-corpus/valid/csv/one-root-with-two-levels-of-tasks-with-metadata-columns/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("valid/csv/one-root-with-two-levels-of-tasks-with-metadata-columns: must be accepted — one root with two levels of tasks with metadata columns must be accepted.: {e}"));
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn one_root_with_zero_levels_of_tasks_with_inferred_types() {}
+fn one_root_with_zero_levels_of_tasks_with_inferred_types() {
+    let given = include_str!("../../../../test-corpus/valid/csv/one-root-with-zero-levels-of-tasks-with-inferred-types/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("valid/csv/one-root-with-zero-levels-of-tasks-with-inferred-types: must be accepted — one root with zero levels of tasks with inferred types must be accepted.: {e}"));
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn one_root_with_zero_levels_of_tasks_with_metadata_json_column() {}
+fn one_root_with_zero_levels_of_tasks_with_metadata_json_column() {
+    let given = include_str!("../../../../test-corpus/valid/csv/one-root-with-zero-levels-of-tasks-with-metadata-json-column/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("valid/csv/one-root-with-zero-levels-of-tasks-with-metadata-json-column: must be accepted — one root with zero levels of tasks with metadata json column must be accepted.: {e}"));
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn one_root_with_zero_levels_of_tasks_with_metadata_json_column_and_columns() {}
+fn one_root_with_zero_levels_of_tasks_with_metadata_json_column_and_columns() {
+    let given = include_str!("../../../../test-corpus/valid/csv/one-root-with-zero-levels-of-tasks-with-metadata-json-column-and-columns/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("valid/csv/one-root-with-zero-levels-of-tasks-with-metadata-json-column-and-columns: must be accepted — one root with zero levels of tasks with metadata json column and columns must be accepted.: {e}"));
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn one_root_with_zero_levels_of_tasks_with_metadata_prefix() {}
+fn one_root_with_zero_levels_of_tasks_with_metadata_prefix() {
+    let given = include_str!("../../../../test-corpus/valid/csv/one-root-with-zero-levels-of-tasks-with-metadata-prefix/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("valid/csv/one-root-with-zero-levels-of-tasks-with-metadata-prefix: must be accepted — one root with zero levels of tasks with metadata prefix must be accepted.: {e}"));
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn one_root_with_zero_levels_of_tasks_with_unknown_columns() {}
+fn one_root_with_zero_levels_of_tasks_with_unknown_columns() {
+    let given = include_str!("../../../../test-corpus/valid/csv/one-root-with-zero-levels-of-tasks-with-unknown-columns/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("valid/csv/one-root-with-zero-levels-of-tasks-with-unknown-columns: must be accepted — one root with zero levels of tasks with unknown columns must be accepted.: {e}"));
+}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: csv"]
-fn two_roots_with_zero_levels_of_tasks_with_metadata_columns() {}
+fn two_roots_with_zero_levels_of_tasks_with_metadata_columns() {
+    let given = include_str!("../../../../test-corpus/valid/csv/two-roots-with-zero-levels-of-tasks-with-metadata-columns/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("valid/csv/two-roots-with-zero-levels-of-tasks-with-metadata-columns: must be accepted — two roots with zero levels of tasks with metadata columns must be accepted.: {e}"));
+}
