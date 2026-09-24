@@ -1,6 +1,6 @@
 # Releasing ops-lib
 
-The `ops-lib` crate (in `ops/lib/`) is released by a manually triggered GitHub
+The `ops-lib` crate (in `ops/`) is released by a manually triggered GitHub
 Actions workflow. The same pipeline can be rehearsed locally with
 `mask release`.
 
@@ -8,7 +8,7 @@ Actions workflow. The same pipeline can be rehearsed locally with
 
 On `main`, before a release:
 
-1. `version` in `ops/lib/Cargo.toml` is the version to release, in SemVer.
+1. `version` in `ops/Cargo.toml` is the version to release, in SemVer.
 2. `ops/CHANGELOG.md` carries that version as its **latest** entry in
    [Keep a Changelog](https://keepachangelog.com/) form:
 
@@ -43,7 +43,7 @@ from `main`.
    tests, docs) followed by `.github/actions/audit` (advisories and license
    policy). Both run inline in the release job.
 2. **Release** — `scripts/release.sh`:
-   1. read `version` from `ops/lib/Cargo.toml` and log it
+   1. read `version` from `ops/Cargo.toml` and log it
    2. validate it as SemVer
    3. *(real runs only)* require `ops/CHANGELOG.md`'s latest released
       version to be this version, formatted `## [x.y.z] - YYYY-MM-DD`

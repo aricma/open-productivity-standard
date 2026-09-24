@@ -2,7 +2,7 @@
 
 This mask file documents the actions you can run in this repo. Install
 `mask` (`brew install mask` or `cargo install mask`), then run `mask setup`
-once. The Cargo workspace is in `ops/lib/`; the standard is in `specs/`.
+once. The Cargo workspace is in `ops/`; the standard is in `specs/`.
 
 Deviations from the standard command set, kept lean on purpose:
 

@@ -25,6 +25,7 @@ This crate is one half of the OPS monorepo; the standard lives in
 
 ```
 ops/
+├── Cargo.toml           the crate manifest
 ├── lib/                 the library (source only)
 │   ├── lib.rs           facade: read/write + re-exports
 │   ├── doc/             the OpsDoc trait, one file per serialization

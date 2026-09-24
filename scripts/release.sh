@@ -24,7 +24,7 @@ done
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 
-CARGO_TOML="ops/lib/Cargo.toml"
+CARGO_TOML="ops/Cargo.toml"
 CHANGELOG="ops/CHANGELOG.md"
 
 # --- crate name and version, read from the manifest ------------------------

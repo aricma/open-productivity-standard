@@ -1,4 +1,4 @@
-//! Runs the language-agnostic corpus in `../../test-corpus`.
+//! Runs the language-agnostic corpus in `../test-corpus`.
 //!
 //! - `valid/<case>/{claim.txt, given.<ext>}` — importing `given` must
 //!   succeed.
@@ -19,8 +19,8 @@
 use ops_lib::Format;
 use std::path::{Path, PathBuf};
 
-/// `../../test-corpus`, resolved independently of the working directory.
-const CORPUS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-corpus");
+/// `../test-corpus`, resolved independently of the working directory.
+const CORPUS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../test-corpus");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Group {

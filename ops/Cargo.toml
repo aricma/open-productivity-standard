@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/aricma/open-productivity-spec"
 
 [lib]
-path = "lib.rs"
+path = "lib/lib.rs"
 
 [lints.rust]
 unsafe_code = "deny"
@@ -20,8 +20,8 @@ serde_yaml = "0.9"
 
 [[test]]
 name = "corpus"
-path = "../tests/corpus.rs"
+path = "tests/corpus.rs"
 
 [[test]]
 name = "model"
-path = "../tests/model.rs"
+path = "tests/model.rs"

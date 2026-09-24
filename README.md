@@ -102,7 +102,7 @@ The standard lives in [`specs/`](specs/): start with the
 [specification (v0 draft)](specs/open_productivity_standard_v0.md) or the
 [spec README](specs/README.md).
 
-It is more than prose: a working [reference library in Rust](ops/lib/)
+It is more than prose: a working [reference library in Rust](ops/)
 reads and writes OPS losslessly, with round-trips checked against a
 portable [conformance corpus](test-corpus/) of plain-text cases any
 implementation can run. The library consumes the corpus in place, so
