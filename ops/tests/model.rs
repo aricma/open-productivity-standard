@@ -1,6 +1,6 @@
 //! Model-level tests: cases that cannot be expressed as a document in the
 //! portable corpus — building an invalid in-memory model, the full-model
-//! round-trip, and writer determinism.
+//! round-trip, and writer idempotence.
 
 use ops_lib::v0::{Format, Status, Task};
 use serde_json::{Map, Value, json};
@@ -63,14 +63,18 @@ fn full_model_roundtrips_through_every_format() {
 }
 
 #[test]
-fn writing_is_deterministic() {
+fn writing_is_idempotent() {
+    // A formatter (or a `--fix`) rewrites a file it just wrote; the bytes
+    // must not churn. Byte layout is per implementation — OPS fixes the
+    // model, not the bytes — so this checks stability, not a canonical form.
     for format in [Format::Json, Format::Yaml, Format::Jsonl] {
         let first = ops_lib::v0::write(format, &[full_model()]).unwrap();
-        let second = ops_lib::v0::write(format, &[full_model()]).unwrap();
+        let parsed = ops_lib::v0::read(format, &first).unwrap();
+        let again = ops_lib::v0::write(format, &parsed).unwrap();
         assert_eq!(
             first,
-            second,
-            "{} write is not deterministic",
+            again,
+            "{} write -> read -> write is not byte-stable",
             format.name()
         );
     }

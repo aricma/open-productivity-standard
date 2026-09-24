@@ -60,7 +60,14 @@ the spec neither owns nor references it. Sharing one set of cases keeps
 them honest — a case an implementation cannot run still documents the
 contract.
 
-Comparison is semantic on purpose. The standard fixes field names and
-mappings, not key order, indentation, or trailing newline, so pinning a
-canonical byte form — and comparing writer output byte for byte — is
-deliberately left as future work.
+Comparison is semantic on purpose: OPS defines the model and its
+mapping onto each format, not one byte stream every tool must
+reproduce, so two implementations may lay out the same model
+differently without failing conformance.
+
+Layout is not free where it carries meaning — Markdown's two-space
+indentation, CSV and RFC 4180 quoting, YAML block nesting — so the spec
+fixes those, and a writer must emit well-formed, idempotent output:
+read your own bytes and write them again and nothing changes. The
+reference writer targets one stable, minimal form, since it doubles as
+a formatter.

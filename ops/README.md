@@ -20,6 +20,11 @@ A Rust reader/writer for the
 - **Validates** on both sides: parsing never returns an invalid forest,
   and in-memory models are checked before serializing (duplicate ids,
   metadata key charset, version placement and released versions).
+- **Writes the same bytes twice**: output is idempotent — write, read,
+  write again is byte-stable — so reformatting a file never churns it.
+  Layout matters where a format depends on it (Markdown indentation,
+  CSV quoting, YAML nesting), and the writer emits one stable, minimal
+  form.
 
 ## Repository layout
 

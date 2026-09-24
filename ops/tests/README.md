@@ -5,5 +5,5 @@ concern:
 
 - `corpus.rs` — runs the portable corpus in `../test-corpus`.
 - `model.rs` — model-level checks that cannot be expressed as a corpus
-  document: in-memory invalid models, writer determinism, and the
+  document: in-memory invalid models, writer idempotence, and the
   full-model round-trip.
