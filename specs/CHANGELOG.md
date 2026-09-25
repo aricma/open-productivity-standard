@@ -21,7 +21,8 @@ model may change before the first release.
   with the root's metadata in the body and only `version` and `status` in
   the frontmatter; notes stay plain lines, so a plain `key: value` is
   prose and only a bullet is metadata.
-- First draft of the decision records (`adr/`, index in
-  `adr/README.md`): one file per decision (ADR-001–011; ADR-009
-  pending), with the CSV and Markdown metadata decisions included.
+- First draft of the decision records: one file per decision, numbered
+  once and living in `rfc/` while open or in `dr/` once locked (indexes
+  in each folder's `README.md`), with the CSV and Markdown metadata
+  decisions included.
 - Everything under the MIT license for now (see `LICENSE`).
