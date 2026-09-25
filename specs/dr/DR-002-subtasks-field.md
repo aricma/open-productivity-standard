@@ -1,6 +1,4 @@
-# ADR-006: `subtasks` instead of `children`
-
-**Status:** Accepted.
+# DR-002: `subtasks` instead of `children`
 
 ## Context
 

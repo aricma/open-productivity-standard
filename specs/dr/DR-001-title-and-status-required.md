@@ -1,6 +1,4 @@
-# ADR-002: Only `title` and `status` are required
-
-**Status:** Accepted.
+# DR-001: Only `title` and `status` are required
 
 ## Context
 
