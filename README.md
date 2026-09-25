@@ -98,23 +98,21 @@ The same model in both — convertible without loss.
 
 ## The standard, proven by code
 
-The standard lives in [`specs/`](specs/): start with the
-[specification (v0 draft)](specs/open_productivity_standard_v0.md) or the
-[spec README](specs/README.md).
-
-It is more than prose: a working [reference library in Rust](ops/)
-reads and writes OPS losslessly, with round-trips checked against a
-portable [conformance corpus](test-corpus/) of plain-text cases any
-implementation can run. The library consumes the corpus in place, so
-spec, corpus, and implementation cannot drift apart.
+The standard is the primary value of this repository; the reference
+library and the portable corpus are how it is proven. The library reads
+and writes OPS losslessly, and its round-trips are checked against corpus
+cases any implementation can run, read in place — so spec, corpus, and
+implementation cannot drift apart.
 
 ## Repository
 
-- [`specs/`](specs/) — the standard, its [changelog](specs/CHANGELOG.md),
-  and [decision records](specs/adr/README.md).
-- [`ops/`](ops/) — the reference library: [`ops/lib/`](ops/lib/) source,
-  [`ops/tests/`](ops/tests/) tests, [README](ops/README.md).
-- [`test-corpus/`](test-corpus/) — the portable conformance corpus.
-- [`maskfile.md`](maskfile.md) — local tasks (`mask setup`, `mask ci`, …).
+- [`maskfile.md`](maskfile.md) — what you can run in this repo
+  (`mask setup`, `mask ci`, …).
+- [`specs/`](specs/README.md) — the standard: the primary value of this
+  repo.
+- [`ops/`](ops/README.md) — the reference library that proves the
+  standard holds: the secondary value.
+- [`test-corpus/`](test-corpus/README.md) — the portable suite, for any
+  tool that supports OPS.
 
 License: MIT (see [`LICENSE`](LICENSE)).
