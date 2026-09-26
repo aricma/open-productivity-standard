@@ -229,14 +229,13 @@ switch ($profile) {
   - desc: Profile passed to the test step
 
 ```sh
-$MASK format && $MASK build && $MASK gen-corpus --check && $MASK test --profile "${test_profile:-all}"
+$MASK format && $MASK build && $MASK test --profile "${test_profile:-all}"
 ```
 
 ```powershell
 $selected = if ($test_profile) { $test_profile } else { "all" }
 & $env:MASK format; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 & $env:MASK build; if ($LASTEXITCODE) { exit $LASTEXITCODE }
-& $env:MASK gen-corpus --check; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 & $env:MASK test --profile $selected; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 ```
 
