@@ -218,7 +218,7 @@ switch ($profile) {
 
 ## ci
 
-> Run format, build, and test as a local CI check, fail-fast.
+> Run format, build, and test as a local CI check, fail-fast. Pass --fix to auto-fix first.
 
 **OPTIONS**
 
@@ -227,15 +227,23 @@ switch ($profile) {
   - type: string
   - choices: essential, security, performance, acceptance, all
   - desc: Profile passed to the test step
+- fix
+  - flags: -f --fix
+  - desc: Auto-fix formatting and lints before checking
 
 ```sh
-$MASK format && $MASK build && $MASK test --profile "${test_profile:-all}"
+fix_arg=""
+if [ "${fix:-}" = "true" ]; then
+    fix_arg="--fix"
+fi
+$MASK format $fix_arg && $MASK build $fix_arg && $MASK test --profile "${test_profile:-all}"
 ```
 
 ```powershell
 $selected = if ($test_profile) { $test_profile } else { "all" }
-& $env:MASK format; if ($LASTEXITCODE) { exit $LASTEXITCODE }
-& $env:MASK build; if ($LASTEXITCODE) { exit $LASTEXITCODE }
+$fixArg = if ($fix) { @("--fix") } else { @() }
+& $env:MASK format @fixArg; if ($LASTEXITCODE) { exit $LASTEXITCODE }
+& $env:MASK build @fixArg; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 & $env:MASK test --profile $selected; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 ```
 
