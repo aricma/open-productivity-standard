@@ -1,4 +1,4 @@
-# RFC-004: `id` is optional — required only where a format references by id
+# RFC-001: `id` is optional — required only where a format references by id
 
 ## Context
 

@@ -1,4 +1,4 @@
-# RFC-005: The top-level status is binary
+# RFC-002: The top-level status is binary
 
 ## Context
 
