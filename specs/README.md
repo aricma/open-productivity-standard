@@ -10,6 +10,6 @@ the pitch.
 
 1. [`open_productivity_standard_v0.md`](open_productivity_standard_v0.md) —
    the specification: the standard itself.
-2. [`adr/README.md`](adr/README.md) — decision records: why the standard
-   is the way it is.
-3. [`CHANGELOG.md`](CHANGELOG.md) — the specification history.
+2. [`CHANGELOG.md`](CHANGELOG.md) — the specification history.
+3. [`docs/`](docs/README.md) — the decisions behind the standard: the open
+   [RFCs](docs/rfc/README.md) and the locked [DRs](docs/dr/README.md).
