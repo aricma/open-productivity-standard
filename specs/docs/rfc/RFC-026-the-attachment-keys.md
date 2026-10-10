@@ -1,4 +1,4 @@
-# RFC-025: The recommended keys are `attachment` and `attachments`
+# RFC-026: The recommended keys are `attachment` and `attachments`
 
 ## Context
 

@@ -1,4 +1,4 @@
-# RFC-024: The recommended priority scale is `A`, `B`, `C`, `D`
+# RFC-020: The recommended priority scale is `A`, `B`, `C`, `D`
 
 ## Context
 
@@ -32,8 +32,9 @@ classes:
 
 This is a recommendation, not a rule. `priority` stays a convention — a
 document with `priority: high` or `priority: 3` is valid, a tool that
-already has a scale keeps it, and no reader compares priorities across
-tools or assumes they mean these four classes.
+already has a scale is recommended to keep it under a namespaced key
+(RFC-019), and no reader compares priorities across tools or assumes they
+mean these four classes.
 
 ## Consequences
 

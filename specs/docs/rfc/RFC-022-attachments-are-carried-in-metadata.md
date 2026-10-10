@@ -1,4 +1,4 @@
-# RFC-020: Attachments are carried in `metadata`
+# RFC-022: Attachments are carried in `metadata`
 
 ## Context
 

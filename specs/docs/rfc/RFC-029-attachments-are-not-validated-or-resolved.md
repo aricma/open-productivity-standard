@@ -1,4 +1,4 @@
-# RFC-028: Attachments are not validated or resolved
+# RFC-029: Attachments are not validated or resolved
 
 ## Context
 

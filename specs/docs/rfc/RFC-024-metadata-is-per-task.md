@@ -1,4 +1,4 @@
-# RFC-022: `metadata` is per task
+# RFC-024: `metadata` is per task
 
 ## Context
 

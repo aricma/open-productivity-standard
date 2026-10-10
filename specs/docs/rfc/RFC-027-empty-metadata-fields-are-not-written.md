@@ -1,4 +1,4 @@
-# RFC-026: An empty metadata field is not written
+# RFC-027: An empty metadata field is not written
 
 ## Context
 

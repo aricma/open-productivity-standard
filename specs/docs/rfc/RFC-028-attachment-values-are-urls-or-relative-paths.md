@@ -1,4 +1,4 @@
-# RFC-027: An attachment value is a URL or a relative path
+# RFC-028: An attachment value is a URL or a relative path
 
 ## Context
 
