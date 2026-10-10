@@ -1,0 +1,1 @@
+a duplicate metadata key is accepted; the last value wins.
