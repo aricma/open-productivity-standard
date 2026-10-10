@@ -23,8 +23,12 @@ What is still open.
 | [RFC-017](RFC-017-the-core-data-model.md) | The core data model |
 | [RFC-018](RFC-018-three-levels-of-ops-support.md) | Three levels of OPS support |
 | [RFC-019](RFC-019-common-metadata-keys.md) | The common metadata keys are normative |
-| [RFC-020](RFC-020-attachments-are-metadata-paths.md) | Attachments are metadata paths |
+| [RFC-020](RFC-020-attachments-are-carried-in-metadata.md) | Attachments are carried in `metadata` |
 | [RFC-021](RFC-021-a-metadata-key-is-unique-and-never-a-field.md) | A metadata key is unique and never a field |
 | [RFC-022](RFC-022-metadata-is-per-task.md) | `metadata` is per task |
 | [RFC-023](RFC-023-metadata-values-are-single-line.md) | A metadata value is single-line |
 | [RFC-024](RFC-024-the-recommended-priority-scale.md) | The recommended priority scale is `A`, `B`, `C`, `D` |
+| [RFC-025](RFC-025-the-attachment-keys.md) | The recommended keys are `attachment` and `attachments` |
+| [RFC-026](RFC-026-empty-metadata-fields-are-not-written.md) | An empty metadata field is not written |
+| [RFC-027](RFC-027-attachment-values-are-urls-or-relative-paths.md) | An attachment value is a URL or a relative path |
+| [RFC-028](RFC-028-attachments-are-not-validated-or-resolved.md) | Attachments are not validated or resolved |
