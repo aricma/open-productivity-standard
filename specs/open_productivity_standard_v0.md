@@ -138,14 +138,19 @@ reject it.
    Keys are constrained, values are not: a value is free data, with no
    character set, case rule, or language of its own, and nested values
    have no depth limit. A value that carries nothing — an empty string,
-   list, map, or `null` — is read as absent. (RFC-011, RFC-026)
+   list, map, or `null` — is read as absent. (RFC-011, RFC-027)
 8. **A `done` task has no open subtask** — if a task is `done`, every
    subtask is `done` too. A task may be `open` with subtasks of either
    status; only the done → open direction is invalid. A reader must
    reject a document that breaks this rule. (RFC-012)
 9. **Attachments** — attachments are references carried in
-   `metadata`. (RFC-020)
-10. **Empty export** — a root task with no subtasks is a valid export,
+   `metadata`. (RFC-022)
+10. **A metadata key is unique** — a key may be supplied once per task.
+    A key supplied twice is invalid in every format: a repeated JSON or
+    YAML key, a repeated Markdown bullet, two CSV columns with the same
+    header, or the same key in both the `metadata` object and a column.
+    A reader fails rather than taking the first or the last. (RFC-023)
+11. **Empty export** — a root task with no subtasks is a valid export,
     whether it represents an empty export or a single standalone task —
     the structure is identical. A document with no tasks at all is an
     empty forest, and is also valid.
@@ -192,18 +197,14 @@ specifications to read it with.
 ### About metadata
 
 The core fields are simple, so there is little to recommend about them.
-The hard part is making `metadata` compatible across tools, and building
-the heuristics that read another tool's export.
+The hard part is making `metadata` compatible across tools.
 
 `metadata` is open — anyone may add key-value pairs, as long as the
-keys match the metadata key character set. We recommend keeping them
-flat: it keeps the metadata simple, self-explanatory, and readable.
-The specifications define a task with very few required fields. This
-allows us to keep the interaction with the data simple, fast, and
-direct. However, many productivity tools already have a long list of
-other information that they track. To support these and to make tool
-interoperability simple, we want to give a few suggestions for common
-attributes and how to spell them.
+keys match the metadata key character set, and it belongs to a task; a
+document itself carries none. A reader carries the pairs without
+interpreting them, and an application decides what to use. We recommend
+keeping the pairs flat, which keeps them simple, self-explanatory, and
+readable.
 
 Recommended keys for the most common task attributes in the wild:
 
@@ -229,7 +230,12 @@ valid. A tool with no scale of its own can use `priority` as `A` (urgent
 and important), `B` (important, not urgent), `C` (urgent, not important),
 or `D` (neither) — the four classes of the Eisenhower matrix, in the
 order to work on them. It stays a recommendation: a tool with its own
-scale keeps it, and a reader never compares priorities across tools.
+scale keeps it under a namespaced key, and a reader never compares
+priorities across tools.
+
+Data that fits none of these keys goes under a namespaced key — the
+tool's name plus an underscore, `jira_ticket_id` — so one tool's extra
+fields never collide with another's.
 
 If teams follow the convention of using these attributes, parsing
 tasks across tools will already be much simpler.
@@ -325,9 +331,10 @@ Cell values:
 - An empty cell means the key is absent, not an empty value.
 
 The `metadata` column and the metadata columns are merged; a metadata
-column overrides the same key in the `metadata` object. Any non-reserved
-column is metadata, so an unexpected column adds data instead of failing
-the read. A row without `title` or `status` is invalid.
+column that repeats a key already in the `metadata` object is invalid, a
+duplicate. Any non-reserved column is metadata, so an unexpected column
+adds data instead of failing the read. A row without `title` or `status`
+is invalid.
 `subtasks` is a JSON array of child ids, as in JSONL, and roots carry no
 id. `version` is a document property: every root row that declares it must
 declare the same value, and absent means the latest release. Values
@@ -359,8 +366,10 @@ leading `---` block that is not a mapping is ordinary content.
 
 Any other line in a task's scope is a note on that task; `- key: value`
 with a valid metadata key is metadata — the value is the text after the
-colon, so a value read from Markdown is a string. Content
-before the first task is not part of the document.
+colon, so a value read from Markdown is a string. A value with a line
+break is written on one line, double-quoted with the break escaped
+(`\n`, JSON-style), and a reader decodes the escapes back to the real
+characters. Content before the first task is not part of the document.
 
 ```markdown
 ---
