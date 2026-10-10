@@ -2,14 +2,12 @@
 
 Open work for the OPS specification repo.
 
-- [ ] Release OPS v1, promoting the v0 draft (p1:e2)
-- [ ] Implement CSV and Markdown support in ops-lib so their corpus cases are tested too (p2:e3)
-- [ ] Decide how the specs handle flat task lists with no root task (p2:e2)
-- [ ] Add a CLI at `ops/cli` with a simple interface to validate and auto-fix task documents in any supported format, for CI and for AI agents (p2:e3)
-- [ ] Add a `SKILL.md` so agents can use the ops CLI to format, fix, and validate local `TODOs.md` files and convert them to any supported format (p2:e3)
+- [ ] Release ops-lib v0.1.0 (p1:e2)
 
 ## Done ✅
 - [x] Move the Rust library under `ops/` (`ops-lib/` → `ops/lib/`)
-- [x] Decide the Markdown metadata format: metadata is a bulleted `key: value`, notes stay plain lines (ADR-011)
+- [x] Decide the Markdown metadata format: metadata is a bulleted `key: value`, notes stay plain lines (RFC-015)
 - [x] Decide whether OPS pins a canonical byte form: it does not — comparison stays semantic, and writers must be idempotent (see `test-corpus/README.md`)
 - [x] Add performance and boundary tests to ops-lib: `v0::limits` guardrails enforced on read/write, `tests/security/` boundary cases, and an O(N) performance tripwire (see [ops/SECURITY.md](ops/SECURITY.md))
+- [x] Implement CSV and Markdown support in ops-lib so their corpus cases are tested too
+- [x] Decide how the specs handle flat task lists with no root task: a document is a forest of zero or more roots, and Markdown follows the document outline
