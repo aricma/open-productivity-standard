@@ -27,3 +27,4 @@ What is still open.
 | [RFC-021](RFC-021-a-metadata-key-is-unique-and-never-a-field.md) | A metadata key is unique and never a field |
 | [RFC-022](RFC-022-metadata-is-per-task.md) | `metadata` is per task |
 | [RFC-023](RFC-023-metadata-values-are-single-line.md) | A metadata value is single-line |
+| [RFC-024](RFC-024-the-recommended-priority-scale.md) | The recommended priority scale is `A`, `B`, `C`, `D` |
