@@ -145,11 +145,8 @@ reject it.
    reject a document that breaks this rule. (RFC-012)
 9. **Attachments** — attachments are references carried in
    `metadata`. (RFC-022)
-10. **A metadata key is unique** — a key may be supplied once per task.
-    A key supplied twice is invalid in every format: a repeated JSON or
-    YAML key, a repeated Markdown bullet, two CSV columns with the same
-    header, or the same key in both the `metadata` object and a column.
-    A reader fails rather than taking the first or the last. (RFC-023)
+10. **A metadata key is unique** — a task carries at most one value per
+    key. (RFC-023)
 11. **Empty export** — a root task with no subtasks is a valid export,
     whether it represents an empty export or a single standalone task —
     the structure is identical. A document with no tasks at all is an
