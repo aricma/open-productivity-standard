@@ -12,7 +12,7 @@ detection.
 ## Decision
 
 Metadata is a bulleted `key: value` line at the task's content indent —
-`- key: value`, with a key from rule 5's charset. Notes are the plain
+`- key: value`, with a key from the metadata key charset. Notes are the plain
 lines at that indent, so a plain `key: value` stays prose and only a
 bullet is metadata. Child tasks are `- [ ]` / `- [x]` bullets at the same
 indent. The root's metadata moves from frontmatter into the body;

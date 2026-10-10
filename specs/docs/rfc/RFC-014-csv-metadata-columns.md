@@ -16,8 +16,7 @@ column as metadata. A metadata column is the key, optionally prefixed
 `_string`, `_number`, or `_bool` to pin a type. A cell that parses as JSON
 is that value, and any other cell is a string. The optional `metadata`
 JSON column is allowed and merged with the metadata columns, which
-override it. Invalid metadata keys still make the document invalid
-(rule 5).
+override it. Invalid metadata keys still make the document invalid.
 
 ## Consequences
 

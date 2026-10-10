@@ -29,7 +29,7 @@ below a root.
 
 The carriers stay format-native, with no wrapper: Markdown uses
 frontmatter, and JSON, YAML, JSONL, and CSV write `version` on root
-records. Because the field name is fixed (rule 8), finding the declared
+records. Because the field name is fixed, finding the declared
 version is a version-agnostic syntax scan — the library exposes it as
 `detect_version` — so the reader can choose a version module before
 parsing the document.
