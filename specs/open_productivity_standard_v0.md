@@ -14,7 +14,7 @@ its stability, and any document claiming version `0` follows this
 document.
 
 A minimal, tool-agnostic data structure for exchanging tasks between
-productivity tools. Any tool can export its tasks, any other tool can
+productivity tools. Any tool can export its tasks, and any other tool can
 import them.
 
 ## The model
@@ -32,14 +32,14 @@ At its core, a task is a written line on a piece of paper with a checkmark
 next to it.
 
 ```plaintext
-[x] Buy Milks
+[x] Buy Milk
 [ ] Clean Room
 [ ] Find Purpose
 ```
 
 The standard keeps exactly that: `title` is the line — it must
 explain itself — and `status` says whether it's done. Those two are the
-only required fields because they're the only information you need to
+only required fields because that is all the information you need to
 understand a task at any level.
 
 Everything else is metadata the reader brings. More tasks make a
@@ -49,8 +49,8 @@ exactly why the standard defines **no** such levels — only tasks, nested.
 
 Everything beyond title and status — due dates, priorities, tags,
 estimates, platform statuses — is real data, but every tool spells it
-differently. Rather than standardize each one, the
-standard keeps them as metadata, preserved verbatim.
+differently. Rather than standardize each one, OPS keeps them as
+metadata, preserved verbatim.
 
 This enables us to get three things:
 
@@ -63,12 +63,12 @@ This enables us to get three things:
   the intersection of what tools share, not the union: new concepts
   arrive as metadata, never as new top-level fields.
 - **Abstraction** — the structure is open and stable, so tools can
-  expose their tasks through OPS-based APIs, and automations and
+  expose their tasks through OPS-based APIs, and automation and
   analysis are written once against the OPS shape and work across every
   OPS-capable tool, instead of being re-implemented per platform.
 - **Ownership** — your productivity data stays yours. Exports are
-  lossless: re-importing into the same tool loses nothing, across
-  tools the aim is none either — unknown details ride along in
+  lossless: re-importing into the same tool loses nothing, and across
+  tools the aim is the same — unknown details ride along in
   `metadata` instead of being dropped, so nothing stops you from
   leaving or returning to a tool when you want to.
 
@@ -80,82 +80,78 @@ tasks are the concrete work) and from hints in `metadata` — keys like
 These heuristics are allowed but never required: the standard defines no
 types, so no tool is wrong for not knowing one.
 
-## Fields
+---
+
+## About the Task
+
+A task is a record of a few named fields. This chapter defines the fields
+and the rules that make a task valid.
+
+### Fields
+
+Every task is made of these fields. Two are required, the rest are
+optional, and a tool that has nothing to put in a field leaves it out.
 
 | Field      | Type                   | Required | Notes |
 |------------|------------------------|----------|-------|
 | `title`    | string                 | yes      | The human-readable summary: the line on the paper. |
 | `status`   | `"open"` / `"done"`    | yes      | `open` or `done`. |
-| `version`  | string                 | no*      | The version the graph is modeled after. |
 | `id`       | string                 | yes*     | Identifier for formats that reference tasks by id. |
 | `notes`    | string                 | no       | Long-form text, plain or Markdown. |
 | `subtasks` | task[]                 | no       | Nested task objects or child-id references, per serialization. |
 | `metadata` | object                 | no       | Tool- or concern-specific data, keyed by tool or concern. |
 
-`yes*` means required under conditions; `no*` means optional but
-conditional — an asterisk always points at the rules.
+`yes*` means required under conditions: a format that references tasks by
+id needs one.
 
-## Rules
+### Rules
+
+A document that breaks one of these rules is invalid, and a reader must
+reject it.
 
 1. **Required fields** — `title` and `status` appear on every task.
-2. **`id` and uniqueness** — task ids are required under conditions:
+   (DR-001)
+2. **`subtasks` define hierarchy** — a task can have subtasks and
+   exactly one parent. Tasks build an acyclic directed graph. (DR-002)
+3. **`id` and uniqueness** — task ids are required under conditions:
    only formats that reference tasks by id need them. Ids have to be
    unique across the whole graph. Nested serializations never need ids.
    Roots never need an id in any format. Though optional, ids can be
-   attached anyway.
-3. **`status` values** — can only be `open` or `done`.
-4. **`subtasks` define hierarchy** — a task can have subtasks and
-   exactly one parent. Tasks build an acyclic directed graph.
-5. **`metadata` is the escape hatch** — anyone may add any key-value
+   attached anyway. (RFC-001)
+4. **`status` values** — can only be `open` or `done`. (RFC-004)
+5. **`notes` carries no level-1 heading** — a task's `notes` must not
+   contain a level-1 ATX heading. The H1 belongs to the title: in
+   Markdown a `#` line inside notes reads back as a new root, splitting
+   the task it belonged to. This constrains the value, so it holds in
+   every serialization, not only in Markdown, and a deeper heading is
+   unaffected. (RFC-007)
+6. **`metadata` is the escape hatch** — anyone may add any key-value
    pairs, but keys must match `^[a-z0-9_]{3,}$` (lowercase letters,
    digits, and underscores, at least three characters; no dots, dashes,
-   camelCase, etc.).
-6. **`version` resolution** — optional; only root tasks may carry it.
-   Each root defines the version its subtree is modeled after, and a
-   version never appears below a root — different roots may declare
-   different versions. It must be a released version of the OPS
-   Specifications. If none is set, the latest released version applies.
-7. **Attachments** — attachments are meant to be added as paths in
-   `metadata` and resolved at the next import.
-8. **Empty export** — a root task with no subtasks is a valid export,
-   whether it represents an empty export or a single standalone task —
-   the structure is identical.
-9. **Field names** — the top-level field names are fixed: single
-   lowercase English words, never renamed or translated.
+   camelCase, etc.). (RFC-008, RFC-010)
+7. **`metadata` values** — a value is one of the six shapes the model
+   carries: string, number, boolean, `null`, list, map. Each
+   serialization spells them its own way — JSON calls a list an array
+   and a map an object, YAML a sequence and a mapping — and a value a
+   format would resolve to some other type of its own, such as a YAML
+   timestamp or set, is read as the string or list it was written as.
+   Keys are constrained, values are not: a value is free data, with no
+   character set, case rule, or language of its own, and nested values
+   have no depth limit. (RFC-011)
+8. **A `done` task has no open subtask** — if a task is `done`, every
+   subtask is `done` too. A task may be `open` with subtasks of either
+   status; only the done → open direction is invalid. A reader must
+   reject a document that breaks this rule. (RFC-012)
+9. **Attachments** — attachments are meant to be added as paths in
+   `metadata` and resolved at the next import. (RFC-020)
+10. **Empty export** — a root task with no subtasks is a valid export,
+    whether it represents an empty export or a single standalone task —
+    the structure is identical. A document with no tasks at all is an
+    empty forest, and is also valid.
+11. **Field names** — the top-level field names are fixed: single
+    lowercase English words, never renamed or translated.
 
-## About metadata
-*Common metadata keys and general recommendations*
-
-`metadata` is open — anyone may add key-value pairs, as long as the
-keys match the character set of rule 5. We recommend keeping them
-flat: it keeps the metadata simple, self-explanatory, and readable.
-The specifications define a task with very few required fields. This
-allows us to keep the interaction with the data simple, fast, and
-direct. However, many productivity tools already have a long list of
-other information that they track. To support these and to make tool
-interoperability simple, we want to give a few suggestions for common
-attributes and how to spell them.
-
-Recommended keys for the most common task attributes in the wild:
-
-| Key            | Value |
-|----------------|-------|
-| `due_date`     | ISO 8601 date |
-| `start_date`   | ISO 8601 date |
-| `priority`     | free-form string (tool scales differ) |
-| `tags`         | list of strings |
-| `status`       | the platform's original status (e.g. "In review") — distinct from the model's `status` field |
-| `estimates`    | number or string (tool units differ) |
-| `location`     | string |
-| `assignee`     | string naming a team member (name, id, or email) |
-| `attachments`  | list of paths — relative to the export, or global (a URL, a path on the machine) |
-| `created_at`   | ISO 8601 timestamp |
-| `updated_at`   | ISO 8601 timestamp |
-| `completed_at` | ISO 8601 timestamp |
-| `url`          | string, link to the task in its source tool |
-
-If teams follow the convention of using these attributes, parsing
-tasks across tools will already be much simpler.
+---
 
 ## Serializations
 
@@ -169,14 +165,65 @@ Formats fall into two families, and the use case decides which to pick:
 - **Tree-preserving** — JSON, YAML, Markdown. `subtasks` holds
   nested task objects, so the graph structure is explicit and recursive
   traversal is straightforward. Best when the whole tree lives in memory
-  anyway, and computation uses graph traversal algorithms for
-  performant results.
+  anyway, and computation uses graph traversal algorithms to stay
+  fast.
 - **Flat and streamable** — JSONL, CSV. `subtasks` holds child ids and
   each record appears on its own line, so a processor handles one record
   at a time and rebuilds the graph by resolving id lists. Best for large
-  exports, logs, and pipe-style processing — not every format is
-  data-transfer efficient, and these exist to be streamable and to
-  perform local, context-based transformations in a very efficient way.
+  exports, logs, and pipe-style processing. These formats exist to be
+  streamable, and to make local, context-based transformations cheap.
+
+### About the Version
+
+A version names the OPS Specifications a document is modeled after. It is
+optional, and one per document:
+
+- A document declares **one** version: every declaration in it must be
+  identical, or the document is invalid. A document never mixes versions.
+- It must be a released version of the OPS Specifications. If none is set,
+  the latest released version applies.
+- A `version` appears on roots only, and never below a root.
+
+Each serialization says where a document writes it: Markdown uses
+frontmatter, and JSON, YAML, JSONL, and CSV write `version` on root
+records. Because the field name is fixed, a reader can find the
+declared version before parsing, and so choose the version of the
+specifications to read it with.
+
+### JSON
+
+A JSON document is a task object — a forest of one root — or an array of
+task objects, a forest whose elements are the roots. Field names map to
+the model unchanged, `subtasks` holds the child task objects, and the
+tree is explicit and recursive.
+
+`id` is optional, since JSON never references a task by id, and a root
+never needs one. `version` appears on a root object, and every
+declaration in a document must agree (see *About the Version*). An unknown field
+makes the document invalid — a new concept arrives in `metadata`, not as a
+new field.
+
+### YAML
+
+YAML carries the same mapping as JSON: a task mapping is a forest of one
+root, a sequence of task mappings is a forest of several, and `subtasks`
+holds the child mappings. YAML's extra syntax — anchors, aliases, tags,
+block scalars — is resolved before the model is read, so it changes the
+bytes, never the values. Because YAML is a superset of JSON, every valid
+JSON document is also a valid YAML document.
+
+### JSONL
+
+JSONL carries the flat family: one task per line, each line a JSON
+object, `subtasks` holding child ids rather than children. Each record
+therefore stands alone and can be processed without its neighbors; blank
+lines are ignored.
+
+A reader rebuilds the forest by resolving those ids: a record that no
+other record references is a root. It rejects a duplicate id, a
+reference to an id that does not exist, a child with more than one
+parent, and a cycle. `version` appears on root records, and
+every declaration in a document must agree (see *About the Version*).
 
 ### CSV
 
@@ -200,8 +247,8 @@ Columns come in two kinds:
   2. If the prefix was present and the remainder ends in `_json`,
      `_string`, `_number`, or `_bool`, that suffix names the value type
      and is stripped.
-  3. The remainder is the metadata key. It must match rule 5's charset;
-     a document whose derived keys break it is invalid.
+  3. The remainder is the metadata key. It must match the metadata key
+     charset — a document whose keys break it is invalid.
 
 The prefix is optional and only needed to avoid a collision — with a
 reserved column, or because the key itself starts with `metadata_`
@@ -222,61 +269,83 @@ Cell values:
 The `metadata` column and the metadata columns are merged; a metadata
 column overrides the same key in the `metadata` object. Any non-reserved
 column is metadata, so an unexpected column adds data instead of failing
-the read. A row without `title` or `status` is invalid (rule 1).
+the read. A row without `title` or `status` is invalid.
 `subtasks` is a JSON array of child ids, as in JSONL, and roots carry no
-id. Values containing commas, quotes, or newlines are quoted per
-RFC 4180.
+id. `version` is a document property: every root row that declares it must
+declare the same value, and absent means the latest release. Values
+containing commas, quotes, or newlines are quoted per RFC 4180.
 
 ### Markdown
 
-Markdown is tree-preserving. Frontmatter carries the root's `version` and
-`status`. The body carries the root and every task:
+Markdown is tree-preserving and follows the document's outline. ATX
+headings at column zero are tasks: heading level `L` is the task's depth,
+so `#` is a root and `######` its six-level descendant. A heading's title
+is the text after the `#`s. A heading that skips a level attaches to the
+nearest shallower one.
 
-- The root's `title` is the first heading. Every other task is a checkbox
-  list item — `- [ ]` is `open`, `- [x]` is `done` — and the text after
-  the marker is the task's `title`.
-- A task's content is indented two spaces below its own line; the root's
-  content starts at column zero. A content line is read by its first
-  character:
-  - `- [` starts a child task.
-  - `- key: value`, with a key from rule 5's charset, is a metadata entry.
-  - any other line is a notes line, including a plain `key: value`.
-- A task's `metadata` precedes its subtasks; values are read the same way
-  as in CSV (a cell that parses as JSON is that value, anything else is a
-  string).
+A heading is `open` unless its title begins with `(Done) `, which makes it
+`done`; `\(Done) ` at the start is a literal `(Done) ` and stays `open`.
 
-Metadata is bulleted so it never collides with notes: a plain
-`key: value` line stays prose, and a bullet that is neither `- [ ]` nor a
-valid `- key: value` is a notes list item. Notes therefore cannot contain
-a list item shaped like a metadata entry or a task marker, and blank
-lines inside notes are not preserved. One metadata key must not appear
-twice.
+A task's children may be deeper headings or checkbox list items, mixed:
+
+- `- [ ]` is `open`, `- [x]` is `done`; the rest of the line is the title.
+- A checkbox at column zero belongs to the nearest heading. A checkbox
+  belongs to the nearest task whose content indent it matches: a heading's
+  content indent is column zero, a checkbox's is its own indent plus two.
+- A checkbox with no preceding task is a root.
+
+Optional YAML frontmatter carries the document `version` and an optional
+root `status` default: a root's `(Done) ` overrides it, and non-root
+headings are never affected. Any other frontmatter key is invalid, and a
+leading `---` block that is not a mapping is ordinary content.
+
+Any other line in a task's scope is a note on that task; `- key: value`
+with a valid metadata key is metadata — the value is the text after the
+colon, so a value read from Markdown is a string. Content
+before the first task is not part of the document.
 
 ```markdown
+---
+version: "0"
+status: open
+---
+
 # Acme product backlog
 
 The product backlog for the Acme platform.
 
-- created_at: 2026-01-01T09:00:00Z
-- url: https://acme.example/backlog
-
 - [ ] Fix memory leak in auth service
-  Today description.
-  anything: else?
   - priority: high
   - [ ] Reproduce the leak
-    - location: Remote
+
+## (Done) Shipped in 2026.3
+
+- [x] Retire the legacy importer
 ```
 
-Notes, metadata, and child tasks share one indentation level (two spaces
-below the task), so notes can hold any text; blank lines between content
-are cosmetic and never change nesting.
+---
 
 ## Conformance
 
-How can software claim OPS conformance? In the following, we look at
-what a reader, writer, and transformer must do. The obligations below
-apply to whatever formats a tool claims to support.
+OPS defines the **core model** — the task model without `metadata`:
+`title` and `status` required, `id`, `notes`, and `subtasks` optional —
+and three levels of support. A tool claims the highest level it meets
+for each serialization it supports.
+
+**Level 1 — Export core.** The tool writes valid OPS documents of the core
+model: `title` and `status`, plus `id`, `notes`, and `subtasks` where it
+has them. It may omit `metadata`.
+
+**Level 2 — Import and export core.** The tool also reads core documents
+and derives the tasks from them, preserving the core model — including the
+hierarchy in `subtasks`. It may discard `metadata`.
+
+**Level 3 — Full, zero data loss.** The tool supports the core model plus
+`metadata`: it reads and writes every field and preserves every node,
+every relation, and all valid `metadata` verbatim across an import →
+export cycle.
+
+The obligations behind the levels:
 
 **OPS Reader** — imports OPS documents.
 
@@ -295,5 +364,57 @@ round-trippers).
 - Must preserve the number and relation of all nodes and graphs per dataset.
 - Must preserve all valid `metadata` verbatim across import → export cycles.
 
-Conformance never means understanding metadata. No tool is required to
-know what another tool's metadata means or to support every serialization.
+A Level 1 tool is an OPS Writer, Level 2 adds the OPS Reader, and Level 3
+adds the OPS Transformer. What a Level 1 or Level 2 tool handles is the
+core model, not just the required fields; `metadata` is optional to
+preserve below Level 3 and required at it. Conformance never means
+understanding metadata: no tool is required to know what another tool's
+metadata means, or to support every serialization.
+
+---
+
+## Recommendations for best practices and cross-tool compatibility
+
+The core fields are simple, so there is little to recommend about them.
+The hard part is making `metadata` compatible across tools, and building
+the heuristics that read another tool's export.
+
+### About metadata
+
+`metadata` is open — anyone may add key-value pairs, as long as the
+keys match the metadata key character set. We recommend keeping them
+flat: it keeps the metadata simple, self-explanatory, and readable.
+The specifications define a task with very few required fields. This
+allows us to keep the interaction with the data simple, fast, and
+direct. However, many productivity tools already have a long list of
+other information that they track. To support these and to make tool
+interoperability simple, we want to give a few suggestions for common
+attributes and how to spell them.
+
+Recommended keys for the most common task attributes in the wild:
+
+| Key            | Value |
+|----------------|-------|
+| `due_date`     | ISO 8601 date |
+| `start_date`   | ISO 8601 date |
+| `priority`     | free-form string (tool scales differ); recommended: `A`, `B`, `C`, `D` (Eisenhower) |
+| `tags`         | list of strings |
+| `status`       | the platform's original status (e.g. "In review") — distinct from the model's `status` field |
+| `estimates`    | number or string (tool units differ) |
+| `location`     | string |
+| `assignee`     | string naming a team member (name, id, or email) |
+| `attachments`  | list of paths — relative to the export, or absolute (a URL, a path on the machine) |
+| `created_at`   | ISO 8601 timestamp |
+| `updated_at`   | ISO 8601 timestamp |
+| `completed_at` | ISO 8601 timestamp |
+| `url`          | string, link to the task in its source tool |
+
+One key carries a recommended scale, and every other spelling stays
+valid. A tool with no scale of its own can use `priority` as `A` (urgent
+and important), `B` (important, not urgent), `C` (urgent, not important),
+or `D` (neither) — the four classes of the Eisenhower matrix, in the
+order to work on them. It stays a recommendation: a tool with its own
+scale keeps it, and a reader never compares priorities across tools.
+
+If teams follow the convention of using these attributes, parsing
+tasks across tools will already be much simpler.
