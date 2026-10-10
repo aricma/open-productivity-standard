@@ -137,19 +137,18 @@ reject it.
    timestamp or set, is read as the string or list it was written as.
    Keys are constrained, values are not: a value is free data, with no
    character set, case rule, or language of its own, and nested values
-   have no depth limit. (RFC-011)
+   have no depth limit. A value that carries nothing — an empty string,
+   list, map, or `null` — is read as absent. (RFC-011, RFC-026)
 8. **A `done` task has no open subtask** — if a task is `done`, every
    subtask is `done` too. A task may be `open` with subtasks of either
    status; only the done → open direction is invalid. A reader must
    reject a document that breaks this rule. (RFC-012)
-9. **Attachments** — attachments are meant to be added as paths in
-   `metadata` and resolved at the next import. (RFC-020)
+9. **Attachments** — attachments are references carried in
+   `metadata`. (RFC-020)
 10. **Empty export** — a root task with no subtasks is a valid export,
     whether it represents an empty export or a single standalone task —
     the structure is identical. A document with no tasks at all is an
     empty forest, and is also valid.
-11. **Field names** — the top-level field names are fixed: single
-    lowercase English words, never renamed or translated.
 
 ---
 
@@ -189,6 +188,65 @@ frontmatter, and JSON, YAML, JSONL, and CSV write `version` on root
 records. Because the field name is fixed, a reader can find the
 declared version before parsing, and so choose the version of the
 specifications to read it with.
+
+### About metadata
+
+The core fields are simple, so there is little to recommend about them.
+The hard part is making `metadata` compatible across tools, and building
+the heuristics that read another tool's export.
+
+`metadata` is open — anyone may add key-value pairs, as long as the
+keys match the metadata key character set. We recommend keeping them
+flat: it keeps the metadata simple, self-explanatory, and readable.
+The specifications define a task with very few required fields. This
+allows us to keep the interaction with the data simple, fast, and
+direct. However, many productivity tools already have a long list of
+other information that they track. To support these and to make tool
+interoperability simple, we want to give a few suggestions for common
+attributes and how to spell them.
+
+Recommended keys for the most common task attributes in the wild:
+
+| Key            | Value |
+|----------------|-------|
+| `due_date`     | ISO 8601 date |
+| `start_date`   | ISO 8601 date |
+| `priority`     | free-form string (tool scales differ); recommended: `A`, `B`, `C`, `D` (Eisenhower) |
+| `tags`         | list of strings |
+| `status`       | the platform's original status (e.g. "In review") — distinct from the model's `status` field |
+| `estimates`    | number or string (tool units differ) |
+| `location`     | string |
+| `assignee`     | string naming a team member (name, id, or email) |
+| `attachment`   | a URL or a path relative to the document |
+| `attachments`  | a list of the same |
+| `created_at`   | ISO 8601 timestamp |
+| `updated_at`   | ISO 8601 timestamp |
+| `completed_at` | ISO 8601 timestamp |
+| `url`          | string, link to the task in its source tool |
+
+One key carries a recommended scale, and every other spelling stays
+valid. A tool with no scale of its own can use `priority` as `A` (urgent
+and important), `B` (important, not urgent), `C` (urgent, not important),
+or `D` (neither) — the four classes of the Eisenhower matrix, in the
+order to work on them. It stays a recommendation: a tool with its own
+scale keeps it, and a reader never compares priorities across tools.
+
+If teams follow the convention of using these attributes, parsing
+tasks across tools will already be much simpler.
+
+### Attachments
+
+Attachments are references carried in `metadata`, never the files
+themselves. The OPS reader and writer do not resolve or validate them:
+they read the references in and write them out, and the surrounding tool
+resolves them, with the network and credentials it has.
+
+The recommended keys are `attachment` for a single reference and
+`attachments` for a list of them — a lone reference in `attachments`
+counts as one, and a reader that finds both keys resolves both. A
+reference is recommended to be a URL — `https://…` (presigned URLs
+included) or `file://…` — or a path relative to the document; an absolute
+location is a `file://` URL.
 
 ### JSON
 
@@ -356,6 +414,8 @@ The obligations behind the levels:
 **OPS Writer** — exports OPS documents.
 
 - Must output only valid documents following the OPS Specifications.
+- Should omit metadata fields that carry no value — an empty string,
+  list, map, or `null`.
 
 **OPS Transformer** — imports and exports (converters, sync tools,
 round-trippers).
@@ -370,51 +430,3 @@ core model, not just the required fields; `metadata` is optional to
 preserve below Level 3 and required at it. Conformance never means
 understanding metadata: no tool is required to know what another tool's
 metadata means, or to support every serialization.
-
----
-
-## Recommendations for best practices and cross-tool compatibility
-
-The core fields are simple, so there is little to recommend about them.
-The hard part is making `metadata` compatible across tools, and building
-the heuristics that read another tool's export.
-
-### About metadata
-
-`metadata` is open — anyone may add key-value pairs, as long as the
-keys match the metadata key character set. We recommend keeping them
-flat: it keeps the metadata simple, self-explanatory, and readable.
-The specifications define a task with very few required fields. This
-allows us to keep the interaction with the data simple, fast, and
-direct. However, many productivity tools already have a long list of
-other information that they track. To support these and to make tool
-interoperability simple, we want to give a few suggestions for common
-attributes and how to spell them.
-
-Recommended keys for the most common task attributes in the wild:
-
-| Key            | Value |
-|----------------|-------|
-| `due_date`     | ISO 8601 date |
-| `start_date`   | ISO 8601 date |
-| `priority`     | free-form string (tool scales differ); recommended: `A`, `B`, `C`, `D` (Eisenhower) |
-| `tags`         | list of strings |
-| `status`       | the platform's original status (e.g. "In review") — distinct from the model's `status` field |
-| `estimates`    | number or string (tool units differ) |
-| `location`     | string |
-| `assignee`     | string naming a team member (name, id, or email) |
-| `attachments`  | list of paths — relative to the export, or absolute (a URL, a path on the machine) |
-| `created_at`   | ISO 8601 timestamp |
-| `updated_at`   | ISO 8601 timestamp |
-| `completed_at` | ISO 8601 timestamp |
-| `url`          | string, link to the task in its source tool |
-
-One key carries a recommended scale, and every other spelling stays
-valid. A tool with no scale of its own can use `priority` as `A` (urgent
-and important), `B` (important, not urgent), `C` (urgent, not important),
-or `D` (neither) — the four classes of the Eisenhower matrix, in the
-order to work on them. It stays a recommendation: a tool with its own
-scale keeps it, and a reader never compares priorities across tools.
-
-If teams follow the convention of using these attributes, parsing
-tasks across tools will already be much simpler.
