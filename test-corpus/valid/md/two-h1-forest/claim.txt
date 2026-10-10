@@ -1,0 +1,1 @@
+each top-level heading is a root.

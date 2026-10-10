@@ -1,0 +1,1 @@
+dotted metadata key must be rejected.

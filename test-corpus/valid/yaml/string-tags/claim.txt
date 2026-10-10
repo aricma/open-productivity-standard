@@ -1,0 +1,1 @@
+a string tags value is accepted — the recommended shape is not enforced.

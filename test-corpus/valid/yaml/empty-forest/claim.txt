@@ -1,0 +1,1 @@
+a document with no tasks is an empty forest.

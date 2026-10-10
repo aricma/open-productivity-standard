@@ -1,0 +1,1 @@
+frontmatter status is the default for a root heading.

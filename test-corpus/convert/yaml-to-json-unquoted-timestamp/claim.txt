@@ -1,0 +1,1 @@
+An unquoted YAML timestamp must convert to JSON as the string it was written as.

@@ -1,0 +1,1 @@
+An empty attachments list must be dropped on import while the other keys survive.

@@ -1,0 +1,1 @@
+A metadata key that spells a field name must not shadow the field.

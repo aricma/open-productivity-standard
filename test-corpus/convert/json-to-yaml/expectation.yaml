@@ -21,7 +21,7 @@ subtasks:
     estimate: 2
   subtasks:
   - title: Grandchild
-    status: open
+    status: done
     id: grandchild
 - title: Child two
   status: open

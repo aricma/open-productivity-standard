@@ -1,0 +1,1 @@
+frontmatter without tasks is an empty forest.

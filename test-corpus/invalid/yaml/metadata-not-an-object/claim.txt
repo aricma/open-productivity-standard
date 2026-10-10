@@ -1,0 +1,1 @@
+metadata must be a mapping.

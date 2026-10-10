@@ -1,0 +1,1 @@
+a due_date that is not a date is accepted — the recommended shape is not enforced.

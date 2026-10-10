@@ -1,0 +1,1 @@
+a line break in a metadata value survives JSON to Markdown.

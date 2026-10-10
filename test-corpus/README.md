@@ -16,6 +16,8 @@ test-corpus/
 ```
 
 `<ext>` is the serialization: `json`, `yaml`, `jsonl`, `csv`, or `md`.
+`valid/` and `invalid/` are split one directory per input format. A
+top-level JSON or YAML array is a forest of roots.
 Every case directory contains:
 
 | File | Required | Meaning |
@@ -50,6 +52,10 @@ report how many were skipped. Skipping is not passing.
 - One case per directory; the directory name is a short statement.
 - `valid/`, `convert/`, and `roundtrips/` hold documents that follow the
   rules; `invalid/` holds documents that break exactly one rule.
+- A model rule is a case in **every** format that can express it, so the
+  formats stay at parity. `valid/` and `invalid/` are split by input
+  format for exactly this reason; a case that only one syntax can express
+  (a CSV metadata column, Markdown frontmatter) stays in that format.
 - Keep fixtures small; `claim.txt` states the contract.
 
 ## Why a portable corpus

@@ -1,0 +1,1 @@
+a (Done) heading is done and keeps its title.

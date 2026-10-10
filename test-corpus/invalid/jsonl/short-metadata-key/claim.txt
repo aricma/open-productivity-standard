@@ -1,0 +1,1 @@
+short metadata key must be rejected.

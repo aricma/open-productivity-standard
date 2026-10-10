@@ -1,0 +1,5 @@
+title: Done parent
+status: done
+subtasks:
+- title: Child
+  status: done

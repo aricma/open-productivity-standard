@@ -1,0 +1,1 @@
+camel case metadata key must be rejected.

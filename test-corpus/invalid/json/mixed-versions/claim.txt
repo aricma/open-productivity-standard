@@ -1,0 +1,1 @@
+one document may not declare two versions.

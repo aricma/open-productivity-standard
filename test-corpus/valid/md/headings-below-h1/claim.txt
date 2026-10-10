@@ -1,0 +1,1 @@
+a heading nests under the nearest shallower one, whatever level it starts at.

@@ -1,0 +1,1 @@
+numeric tags are accepted — the recommended shape is not enforced.

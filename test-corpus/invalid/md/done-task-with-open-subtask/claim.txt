@@ -1,0 +1,1 @@
+a task marked done may not have an open subtask.

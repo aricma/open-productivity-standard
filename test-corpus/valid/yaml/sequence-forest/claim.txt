@@ -1,0 +1,1 @@
+a yaml sequence is a forest of roots.

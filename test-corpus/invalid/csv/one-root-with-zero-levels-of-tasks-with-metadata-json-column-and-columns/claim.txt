@@ -1,0 +1,1 @@
+a metadata column that repeats a key in the metadata object must be rejected.

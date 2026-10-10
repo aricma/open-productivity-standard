@@ -1,0 +1,14 @@
+title: a
+status: open
+subtasks:
+  - title: b
+    status: open
+    subtasks:
+      - title: c
+        status: open
+        subtasks:
+          - title: d
+            status: open
+            subtasks:
+              - title: e
+                status: open

@@ -1,0 +1,1 @@
+a metadata value with a raw line break (an unterminated double-quoted string) must be rejected.

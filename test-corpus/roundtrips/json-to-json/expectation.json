@@ -28,7 +28,7 @@
       "subtasks": [
         {
           "title": "Grandchild",
-          "status": "open",
+          "status": "done",
           "id": "grandchild"
         }
       ]

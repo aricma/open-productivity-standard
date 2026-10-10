@@ -1,0 +1,1 @@
+a metadata value with an escaped line break is accepted and reads back with the line break.
