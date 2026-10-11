@@ -5,6 +5,9 @@ edition = "2024"
 description = "Reader/writer for the Open Productivity Standard (OPS)"
 license = "MIT"
 repository = "https://github.com/aricma/open-productivity-spec"
+# Every target is declared below: the per-format ones live in subdirectories of
+# `tests/features/`, which auto-discovery would take for targets of their own.
+autotests = false
 
 [lib]
 path = "lib/lib.rs"
@@ -48,3 +51,26 @@ required-features = ["json", "yaml", "jsonl", "csv"]
 name = "performance"
 path = "tests/performance/main.rs"
 required-features = ["json", "yaml", "jsonl", "csv"]
+
+# One target per format, so a subset build runs the format it has. A target whose
+# feature is off is not built at all, which is why the claim each build makes
+# about the formats it does not have is asserted from inside the enabled one.
+[[test]]
+name = "feature-json"
+path = "tests/features/json/main.rs"
+required-features = ["json"]
+
+[[test]]
+name = "feature-yaml"
+path = "tests/features/yaml/main.rs"
+required-features = ["yaml"]
+
+[[test]]
+name = "feature-jsonl"
+path = "tests/features/jsonl/main.rs"
+required-features = ["jsonl"]
+
+[[test]]
+name = "feature-csv"
+path = "tests/features/csv/main.rs"
+required-features = ["csv"]
