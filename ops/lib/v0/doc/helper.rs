@@ -9,6 +9,7 @@
 use crate::v0::error::{Error, ValidationError};
 use crate::v0::limits::{Limit, check, metadata_value_bytes};
 use crate::v0::model::flat_task::FlatTask;
+use crate::v0::model::status::Status;
 use crate::v0::model::task::Task;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
@@ -33,6 +34,12 @@ fn walk(
     check(Limit::Tasks, *count)?;
     check(Limit::Children, task.subtasks.len())?;
     check(Limit::Title, task.title.len())?;
+    if task.title.is_empty() {
+        return Err(ValidationError::EmptyTitle);
+    }
+    if task.title.contains(['\n', '\r']) {
+        return Err(ValidationError::TitleHasLineBreak);
+    }
     if let Some(notes) = &task.notes {
         check(Limit::Notes, notes.len())?;
     }
@@ -44,7 +51,7 @@ fn walk(
     }
     if let Some(metadata) = &task.metadata {
         check(Limit::MetadataPairs, metadata.len())?;
-        for (key, value) in metadata {
+        for (key, value) in metadata.iter() {
             if !valid_metadata_key(key) {
                 return Err(ValidationError::InvalidMetadataKey(key.clone()));
             }
@@ -56,6 +63,14 @@ fn walk(
         && !ids.insert(id.clone())
     {
         return Err(ValidationError::DuplicateId(id.clone()));
+    }
+    if task.status == Status::Done
+        && let Some(child) = task.subtasks.iter().find(|c| c.status != Status::Done)
+    {
+        return Err(ValidationError::OpenSubtask {
+            task: task.title.clone(),
+            subtask: child.title.clone(),
+        });
     }
     if depth > 0 && task.version.is_some() {
         return Err(ValidationError::VersionOnSubtask(task.title.clone()));
@@ -77,16 +92,8 @@ pub(crate) fn validate_forest(tasks: &[Task]) -> Result<(), ValidationError> {
     Ok(())
 }
 
-/// Tree-preserving formats hold exactly one root per document.
-pub(crate) fn single_root<'a>(tasks: &'a [Task], format: &str) -> Result<&'a Task, Error> {
-    match tasks {
-        [t] => Ok(t),
-        _ => Err(Error::SingleRootExpected(format.to_string())),
-    }
-}
-
-/// Flatten a task tree into records (pre-order, root first).
-/// Flatten a forest into records (shared by the JSONL and CSV writers).
+/// Flatten a forest into records (pre-order, root first), shared by the
+/// JSONL and CSV writers.
 pub(crate) fn records(tasks: &[Task]) -> Vec<FlatTask> {
     let mut out = Vec::new();
     for t in tasks {
@@ -95,7 +102,7 @@ pub(crate) fn records(tasks: &[Task]) -> Vec<FlatTask> {
     out
 }
 
-pub fn flatten(task: &Task, out: &mut Vec<FlatTask>) {
+fn flatten(task: &Task, out: &mut Vec<FlatTask>) {
     out.push(FlatTask::from_task(task));
     for child in &task.subtasks {
         flatten(child, out);
@@ -106,7 +113,7 @@ pub fn flatten(task: &Task, out: &mut Vec<FlatTask>) {
 /// unique ids, every referenced id exists, one parent per task, no
 /// cycles (a collection with no root is a cycle), `version` on roots
 /// only.
-pub fn forest(records: Vec<FlatTask>) -> Result<Vec<Task>, Error> {
+pub(crate) fn forest(records: Vec<FlatTask>) -> Result<Vec<Task>, Error> {
     check(Limit::Tasks, records.len()).map_err(Error::Validation)?;
     let n = records.len();
     let mut by_id: HashMap<String, usize> = HashMap::new();
@@ -182,4 +189,38 @@ fn build_tree(
             .push(build_tree(records, children, j, depth + 1)?);
     }
     Ok(task)
+}
+
+#[cfg(test)]
+mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+
+    use super::*;
+    use crate::v0::model::status::Status;
+
+    fn parent(status: Status, child: Status) -> Vec<Task> {
+        vec![Task {
+            title: "parent".into(),
+            status,
+            subtasks: vec![Task::new("child".into(), child)],
+            ..Default::default()
+        }]
+    }
+
+    #[test]
+    fn a_done_task_may_not_have_an_open_subtask() {
+        let err = validate_forest(&parent(Status::Done, Status::Open)).unwrap_err();
+        assert_eq!(err.code(), "open-subtask");
+    }
+
+    #[test]
+    fn a_done_task_with_done_subtasks_is_fine() {
+        assert!(validate_forest(&parent(Status::Done, Status::Done)).is_ok());
+    }
+
+    #[test]
+    fn an_open_task_may_have_any_subtask_status() {
+        assert!(validate_forest(&parent(Status::Open, Status::Done)).is_ok());
+        assert!(validate_forest(&parent(Status::Open, Status::Open)).is_ok());
+    }
 }

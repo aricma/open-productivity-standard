@@ -1,1 +1,0 @@
-notes with an h1 must be rejected.

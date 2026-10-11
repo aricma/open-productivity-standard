@@ -16,7 +16,7 @@ impl OpsDoc for Jsonl {
                 continue;
             }
             let raw: RawTask = serde_json::from_str(line)
-                .map_err(|e| Error::Json(format!("line {}: {e}", idx + 1)))?;
+                .map_err(|e| Error::syntax("JSON", format!("line {}: {e}", idx + 1)))?;
             raws.push(raw);
         }
         Ok(raws)
@@ -25,7 +25,9 @@ impl OpsDoc for Jsonl {
     fn write(self, tasks: &[Task]) -> Result<String, Error> {
         let mut out = String::new();
         for r in records(tasks) {
-            out.push_str(&serde_json::to_string(&r).map_err(|e| Error::Json(e.to_string()))?);
+            out.push_str(
+                &serde_json::to_string(&r).map_err(|e| Error::syntax("JSON", e.to_string()))?,
+            );
             out.push('\n');
         }
         Ok(out)

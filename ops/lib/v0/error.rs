@@ -1,27 +1,31 @@
 use crate::v0::limits::Limit;
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
     Validation(ValidationError),
-    SingleRootExpected(String),
-    Json(String),
-    Yaml(String),
-    Csv(String),
-    Md(String),
+    /// One format's syntax, or a value shaped unlike a task.
+    Syntax {
+        format: &'static str,
+        message: String,
+    },
+}
+
+impl Error {
+    /// A syntax or shape rejection from one format.
+    pub(crate) fn syntax(format: &'static str, message: impl ToString) -> Error {
+        Error::Syntax {
+            format,
+            message: message.to_string(),
+        }
+    }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::Validation(e) => write!(f, "invalid OPS document: {e}"),
-            Error::SingleRootExpected(fmt) => {
-                write!(f, "format `{fmt}` holds exactly one root task")
-            }
-            Error::Json(e) => write!(f, "invalid JSON: {e}"),
-            Error::Yaml(e) => write!(f, "invalid YAML: {e}"),
-            Error::Csv(e) => write!(f, "invalid CSV: {e}"),
-            Error::Md(e) => write!(f, "invalid Markdown: {e}"),
+            Error::Syntax { format, message } => write!(f, "invalid {format}: {message}"),
         }
     }
 }
@@ -36,16 +40,26 @@ pub enum ValidationError {
     CyclicReference,
     VersionOnSubtask(String),
     UnknownOPSVersion(String),
+    MixedVersions {
+        first: String,
+        second: String,
+    },
     InvalidMetadataKey(String),
     MissingTitle,
     MissingStatus,
     InvalidStatus(String),
+    EmptyTitle,
+    TitleHasLineBreak,
     UnexpectedField(String),
     InvalidFieldType {
         field: &'static str,
         expected: &'static str,
     },
     DuplicateMetadataKey(String),
+    OpenSubtask {
+        task: String,
+        subtask: String,
+    },
     LimitExceeded {
         limit: Limit,
         got: usize,
@@ -71,11 +85,18 @@ impl fmt::Display for ValidationError {
                 "version `{v}` is not a released OPS version (known: {})",
                 crate::shared::version::RELEASED_VERSIONS.join(", ")
             ),
+            ValidationError::MixedVersions { first, second } => {
+                write!(f, "document declares both version `{first}` and `{second}`")
+            }
             ValidationError::InvalidMetadataKey(key) => {
                 write!(f, "metadata key `{key}` breaks ^[a-z0-9_]{{3,}}$")
             }
             ValidationError::MissingTitle => write!(f, "a task has no title"),
             ValidationError::MissingStatus => write!(f, "a task has no status"),
+            ValidationError::EmptyTitle => write!(f, "a task has an empty title"),
+            ValidationError::TitleHasLineBreak => {
+                write!(f, "a task's title contains a line break")
+            }
             ValidationError::InvalidStatus(s) => {
                 write!(f, "status `{s}` is not `open` or `done`")
             }
@@ -87,6 +108,9 @@ impl fmt::Display for ValidationError {
             }
             ValidationError::DuplicateMetadataKey(key) => {
                 write!(f, "metadata key `{key}` is supplied twice")
+            }
+            ValidationError::OpenSubtask { task, subtask } => {
+                write!(f, "task `{task}` is done but subtask `{subtask}` is open")
             }
             ValidationError::LimitExceeded { limit, got } => write!(
                 f,
@@ -113,13 +137,17 @@ impl ValidationError {
             Self::CyclicReference => "cyclic-reference",
             Self::VersionOnSubtask(_) => "version-on-subtask",
             Self::UnknownOPSVersion(_) => "unknown-version",
+            Self::MixedVersions { .. } => "mixed-versions",
             Self::InvalidMetadataKey(_) => "invalid-metadata-key",
             Self::MissingTitle => "missing-title",
             Self::MissingStatus => "missing-status",
+            Self::EmptyTitle => "empty-title",
+            Self::TitleHasLineBreak => "title-has-line-break",
             Self::InvalidStatus(_) => "invalid-status",
             Self::UnexpectedField(_) => "unexpected-field",
             Self::InvalidFieldType { .. } => "invalid-field-type",
             Self::DuplicateMetadataKey(_) => "duplicate-metadata-key",
+            Self::OpenSubtask { .. } => "open-subtask",
             Self::LimitExceeded { limit, .. } => limit.code(),
         }
     }
@@ -132,8 +160,7 @@ impl Error {
     pub fn code(&self) -> &'static str {
         match self {
             Self::Validation(v) => v.code(),
-            Self::SingleRootExpected(_) => "single-root-expected",
-            Self::Json(_) | Self::Yaml(_) | Self::Csv(_) | Self::Md(_) => "invalid-syntax",
+            Self::Syntax { .. } => "invalid-syntax",
         }
     }
 }
@@ -146,6 +173,11 @@ mod tests {
     fn validation_errors_carry_stable_codes() {
         assert_eq!(ValidationError::MissingTitle.code(), "missing-title");
         assert_eq!(ValidationError::MissingStatus.code(), "missing-status");
+        assert_eq!(ValidationError::EmptyTitle.code(), "empty-title");
+        assert_eq!(
+            ValidationError::TitleHasLineBreak.code(),
+            "title-has-line-break"
+        );
         assert_eq!(
             ValidationError::InvalidStatus("nope".into()).code(),
             "invalid-status"
@@ -165,6 +197,14 @@ mod tests {
         assert_eq!(
             ValidationError::DuplicateMetadataKey("tags".into()).code(),
             "duplicate-metadata-key"
+        );
+        assert_eq!(
+            ValidationError::OpenSubtask {
+                task: "p".into(),
+                subtask: "c".into(),
+            }
+            .code(),
+            "open-subtask"
         );
         assert_eq!(
             ValidationError::DuplicateId("a".into()).code(),
@@ -188,6 +228,14 @@ mod tests {
             "unknown-version"
         );
         assert_eq!(
+            ValidationError::MixedVersions {
+                first: "0".into(),
+                second: "1".into(),
+            }
+            .code(),
+            "mixed-versions"
+        );
+        assert_eq!(
             ValidationError::InvalidMetadataKey("A".into()).code(),
             "invalid-metadata-key"
         );
@@ -203,8 +251,8 @@ mod tests {
 
     #[test]
     fn syntax_errors_share_one_code() {
-        assert_eq!(Error::Csv("x".into()).code(), "invalid-syntax");
-        assert_eq!(Error::Md("x".into()).code(), "invalid-syntax");
+        assert_eq!(Error::syntax("CSV", "x").code(), "invalid-syntax");
+        assert_eq!(Error::syntax("Markdown", "x").code(), "invalid-syntax");
     }
 
     #[test]
@@ -222,11 +270,7 @@ mod tests {
             Error::Validation(ValidationError::MissingTitle).code(),
             "missing-title"
         );
-        assert_eq!(Error::Json("bad".into()).code(), "invalid-syntax");
-        assert_eq!(Error::Yaml("bad".into()).code(), "invalid-syntax");
-        assert_eq!(
-            Error::SingleRootExpected("json".into()).code(),
-            "single-root-expected"
-        );
+        assert_eq!(Error::syntax("JSON", "bad").code(), "invalid-syntax");
+        assert_eq!(Error::syntax("YAML", "bad").code(), "invalid-syntax");
     }
 }

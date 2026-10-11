@@ -1,0 +1,1 @@
+a Markdown bullet whose key is outside the metadata charset reads as a note, not metadata.

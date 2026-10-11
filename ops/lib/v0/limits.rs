@@ -6,6 +6,8 @@
 //! documents why its value was chosen and has a boundary test in
 //! `tests/security/main.rs`.
 
+use crate::v0::model::value::MetadataValue;
+
 /// The whole document, checked before parsing. The parser allocates
 /// intermediates proportional to its input, so this is the only bound on
 /// total parse memory; 16 MiB is roughly 10x the largest performance
@@ -152,7 +154,7 @@ pub(crate) fn check(limit: Limit, got: usize) -> Result<(), crate::v0::error::Va
 }
 
 /// The serialized size of a metadata value, without allocating a copy.
-pub(crate) fn metadata_value_bytes(value: &serde_json::Value) -> usize {
+pub(crate) fn metadata_value_bytes(value: &MetadataValue) -> usize {
     struct Counter(usize);
     impl std::io::Write for Counter {
         fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
@@ -174,6 +176,7 @@ pub(crate) fn metadata_value_bytes(value: &serde_json::Value) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::v0::model::value::Number;
 
     #[test]
     fn limits_report_their_constant() {
@@ -207,8 +210,20 @@ mod tests {
 
     #[test]
     fn metadata_value_bytes_counts_serialized_size() {
-        assert_eq!(metadata_value_bytes(&serde_json::json!("abc")), 5);
-        assert_eq!(metadata_value_bytes(&serde_json::json!(3)), 1);
-        assert_eq!(metadata_value_bytes(&serde_json::json!([1, 2])), 5);
+        assert_eq!(
+            metadata_value_bytes(&MetadataValue::String("abc".into())),
+            5
+        );
+        assert_eq!(
+            metadata_value_bytes(&MetadataValue::Number(Number::from(3_i64))),
+            1
+        );
+        assert_eq!(
+            metadata_value_bytes(&MetadataValue::List(vec![
+                MetadataValue::Number(Number::from(1_i64)),
+                MetadataValue::Number(Number::from(2_i64))
+            ])),
+            5
+        );
     }
 }

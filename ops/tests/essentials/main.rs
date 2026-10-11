@@ -2,11 +2,11 @@
 //! portable corpus — building an invalid in-memory model, the full-model
 //! round-trip, and writer idempotence.
 
-use ops_lib::v0::{Format, Status, Task};
-use serde_json::{Map, Value, json};
+use ops_lib::v0::{Format, Metadata, Status, Task};
+use serde_json::{Value, json};
 
-fn meta(value: Value) -> Map<String, Value> {
-    value.as_object().unwrap().clone()
+fn meta(value: Value) -> Metadata {
+    serde_json::from_value(value).unwrap()
 }
 
 /// Every field populated, two nesting levels.
@@ -34,7 +34,7 @@ fn full_model() -> Task {
                 subtasks: vec![Task {
                     id: Some("grandchild".into()),
                     title: "Grandchild".into(),
-                    status: Status::Open,
+                    status: Status::Done,
                     ..Default::default()
                 }],
                 ..Default::default()
@@ -82,10 +82,6 @@ fn writing_is_idempotent() {
 
 #[test]
 fn invalid_models_are_rejected_before_writing() {
-    let forest = vec![
-        Task::new("Work".into(), Status::Open),
-        Task::new("Personal".into(), Status::Open),
-    ];
     let invalid = [
         (
             vec![
@@ -128,15 +124,45 @@ fn invalid_models_are_rejected_before_writing() {
             }],
             "unknown-version",
         ),
+        (vec![Task::new(String::new(), Status::Open)], "empty-title"),
+        (
+            vec![Task::new("two\nlines".into(), Status::Open)],
+            "title-has-line-break",
+        ),
     ];
     for (tasks, code) in invalid {
         let err = ops_lib::v0::write(Format::Json, &tasks).unwrap_err();
         assert_eq!(err.code(), code);
     }
+}
+
+#[test]
+fn a_forest_roundtrips_through_json_and_yaml() {
+    let forest = vec![
+        Task::new("Work".into(), Status::Open),
+        Task::new("Personal".into(), Status::Done),
+    ];
     for format in [Format::Json, Format::Yaml] {
-        let err = ops_lib::v0::write(format, &forest).unwrap_err();
-        assert_eq!(err.code(), "single-root-expected");
+        let out = ops_lib::v0::write(format, &forest).unwrap();
+        assert_eq!(
+            ops_lib::v0::read(format, &out).unwrap(),
+            forest,
+            "{} forest round-trip changed the model",
+            format.name()
+        );
     }
+    // One root stays an object, so `[a]` normalizes to an object.
+    let one = ops_lib::v0::read(Format::Json, "[{\"title\":\"a\",\"status\":\"open\"}]").unwrap();
+    let out = ops_lib::v0::write(Format::Json, &one).unwrap();
+    assert!(out.trim_start().starts_with('{'), "{out}");
+    assert_eq!(ops_lib::v0::read(Format::Json, &out).unwrap(), one);
+}
+
+#[test]
+fn an_empty_document_is_an_empty_forest() {
+    assert_eq!(ops_lib::v0::read(Format::Json, "[]").unwrap(), vec![]);
+    let out = ops_lib::v0::write(Format::Json, &[]).unwrap();
+    assert_eq!(out.trim(), "[]");
 }
 
 #[test]
@@ -146,4 +172,18 @@ fn the_full_model_covers_every_field() {
     assert!(task.metadata.is_some());
     assert_eq!(task.subtasks.len(), 2);
     assert_eq!(task.subtasks[0].subtasks.len(), 1);
+}
+
+#[test]
+fn a_done_task_with_an_open_subtask_is_rejected() {
+    let tasks = vec![Task {
+        title: "parent".into(),
+        status: Status::Done,
+        subtasks: vec![Task::new("child".into(), Status::Open)],
+        ..Default::default()
+    }];
+    assert_eq!(
+        ops_lib::v0::write(Format::Json, &tasks).unwrap_err().code(),
+        "open-subtask"
+    );
 }

@@ -1,28 +1,32 @@
 //! Field validation: every raw field must have the right shape, or the
 //! document is rejected with a coded error.
 
-use super::helpers::{string_field, wrong_type};
 use super::model::{Common, RawTask};
 use crate::v0::error::{Error, ValidationError};
-use crate::v0::model::status::Status;
+use crate::v0::model::fields::{status_from, string_field, wrong_type};
+use crate::v0::model::value::{Metadata, MetadataValue};
 use serde_json::{Map, Value};
 
-fn status_from(value: &Value) -> Result<Status, Error> {
-    match value.as_str() {
-        Some("open") => Ok(Status::Open),
-        Some("done") => Ok(Status::Done),
-        Some(other) => Err(Error::Validation(ValidationError::InvalidStatus(
-            other.to_owned(),
-        ))),
-        None => Err(wrong_type("status", "\"open\" or \"done\"")),
+fn metadata_from(value: Option<&Value>) -> Result<Option<Metadata>, Error> {
+    match value {
+        None => Ok(None),
+        Some(Value::Object(map)) => {
+            let mut out = Metadata::from_json_map(map.clone());
+            out.retain(|_, v| !empty_value(v));
+            Ok(if out.is_empty() { None } else { Some(out) })
+        }
+        Some(_) => Err(wrong_type("metadata", "an object")),
     }
 }
 
-fn metadata_from(value: Option<&Value>) -> Result<Option<Map<String, Value>>, Error> {
-    match value {
-        None => Ok(None),
-        Some(Value::Object(map)) => Ok(Some(map.clone())),
-        Some(_) => Err(wrong_type("metadata", "an object")),
+/// A value that carries nothing: `null`, or an empty string, list, or map.
+fn empty_value(v: &MetadataValue) -> bool {
+    match v {
+        MetadataValue::Null => true,
+        MetadataValue::String(s) => s.is_empty(),
+        MetadataValue::List(a) => a.is_empty(),
+        MetadataValue::Map(o) => o.is_empty(),
+        _ => false,
     }
 }
 

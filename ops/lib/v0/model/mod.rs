@@ -1,7 +1,9 @@
 //! The OPS data model, per the
-//! [Open Productivity Standard spec](https://github.com/aricma/open-productivity-spec/blob/main/specs/open_productivity_standard_v0.md).
+//! [Open Productivity Standard spec](https://github.com/aricma/open-productivity-spec/blob/main/specs/v0/model.md).
 
+pub(crate) mod fields;
 pub(crate) mod flat_task;
 pub(crate) mod raw_task;
 pub mod status;
 pub mod task;
+pub mod value;

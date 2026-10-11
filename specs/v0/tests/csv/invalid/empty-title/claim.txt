@@ -1,0 +1,1 @@
+a task with an empty title cell must be rejected.

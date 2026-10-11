@@ -1,13 +1,14 @@
 //! CSV serialization (flat/streamable forest): one task per row, the first
 //! row naming the columns. Reserved columns map to the model fields; every
 //! other column is metadata, optionally `metadata_`-prefixed and
-//! type-suffixed (ADR-010).
+//! type-suffixed (RFC-014).
 
 use super::helper::records;
 use crate::v0::doc::OpsDoc;
 use crate::v0::error::{Error, ValidationError};
 use crate::v0::model::raw_task::RawTask;
 use crate::v0::model::task::Task;
+use crate::v0::model::value::{Metadata, MetadataValue};
 use serde_json::{Map, Value};
 use std::collections::{BTreeSet, HashSet};
 
@@ -68,7 +69,7 @@ fn type_suffix(s: &str) -> Option<(CellType, &str)> {
 
 /// RFC 4180 records: `"` quoting with `""` escapes, embedded newlines, LF or
 /// CRLF terminators. Blank lines are skipped.
-fn read_records(input: &str) -> Result<Vec<Vec<String>>, Error> {
+pub(crate) fn read_records(input: &str) -> Result<Vec<Vec<String>>, Error> {
     let mut records: Vec<Vec<String>> = Vec::new();
     let mut record: Vec<String> = Vec::new();
     let mut field = String::new();
@@ -114,7 +115,7 @@ fn read_records(input: &str) -> Result<Vec<Vec<String>>, Error> {
         }
     }
     if quoted {
-        return Err(Error::Csv("unterminated quoted field".into()));
+        return Err(Error::syntax("CSV", "unterminated quoted field"));
     }
     if started || !field.is_empty() || !record.is_empty() {
         record.push(field);
@@ -180,16 +181,16 @@ fn column_name(key: &str) -> Option<String> {
 }
 
 /// Whether a value written in a bare column is read back unchanged.
-fn infer_safe(value: &Value) -> bool {
+fn infer_safe(value: &MetadataValue) -> bool {
     match value {
-        Value::String(s) => !s.is_empty() && serde_json::from_str::<Value>(s).is_err(),
+        MetadataValue::String(s) => !s.is_empty() && serde_json::from_str::<Value>(s).is_err(),
         _ => true,
     }
 }
 
-fn value_cell(value: &Value) -> String {
+fn value_cell(value: &MetadataValue) -> String {
     match value {
-        Value::String(s) => s.clone(),
+        MetadataValue::String(s) => s.clone(),
         other => serde_json::to_string(other).unwrap_or_default(),
     }
 }
@@ -198,7 +199,7 @@ impl OpsDoc for Csv {
     fn parse(self, input: &str) -> Result<Vec<RawTask>, Error> {
         let mut rows = read_records(input)?;
         if rows.is_empty() {
-            return Err(Error::Csv("the header row is required".into()));
+            return Err(Error::syntax("CSV", "the header row is required"));
         }
         let header: Vec<Column> = rows.remove(0).iter().map(|h| classify(h)).collect();
 
@@ -232,7 +233,7 @@ impl OpsDoc for Csv {
         let mut columns: Vec<(String, String)> = Vec::new();
         let mut fallback: BTreeSet<String> = BTreeSet::new();
         for key in &keys {
-            let values: Vec<&Value> = rows
+            let values: Vec<&MetadataValue> = rows
                 .iter()
                 .filter_map(|row| row.metadata.as_ref().and_then(|m| m.get(key)))
                 .collect();
@@ -269,7 +270,7 @@ impl OpsDoc for Csv {
                 serde_json::to_string(&row.subtasks).unwrap_or_else(|_| "[]".to_string()),
             ];
             if split {
-                let object: Map<String, Value> = row
+                let object: Metadata = row
                     .metadata
                     .as_ref()
                     .map(|m| {
@@ -332,16 +333,23 @@ fn row_to_raw(header: &[Column], row: &[String]) -> Result<RawTask, Error> {
         }
     }
 
-    // The `metadata` column is merged first; metadata columns override it.
+    // The `metadata` column is merged with the metadata columns; a column
+    // that repeats a key already in the object is a duplicate, not an
+    // override (RFC-023).
     let mut metadata = json_metadata.unwrap_or_default();
     for (key, value) in column_metadata {
+        if metadata.contains_key(&key) {
+            return Err(Error::Validation(ValidationError::DuplicateMetadataKey(
+                key,
+            )));
+        }
         metadata.insert(key, value);
     }
     if !metadata.is_empty() {
         fields.insert("metadata".to_string(), Value::Object(metadata));
     }
 
-    serde_json::from_value(Value::Object(fields)).map_err(|e| Error::Csv(e.to_string()))
+    RawTask::from_fields(fields)
 }
 
 #[cfg(test)]

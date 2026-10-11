@@ -1,0 +1,1 @@
+notes may carry a level-1 heading: the model allows it, and only a Markdown writer refuses it.

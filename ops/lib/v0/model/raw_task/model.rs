@@ -6,13 +6,15 @@
 //! tasks (tree formats) or child ids (flat formats) is the caller's
 //! decision — the serialization, not the value, decides.
 
-use super::helpers::{child, string_field, wrong_type};
+use super::helpers::child;
 use super::validators::common;
 use crate::v0::error::Error;
 use crate::v0::limits::{Limit, check};
+use crate::v0::model::fields::{string_field, wrong_type};
 use crate::v0::model::flat_task::FlatTask;
 use crate::v0::model::status::Status;
 use crate::v0::model::task::Task;
+use crate::v0::model::value::Metadata;
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
@@ -37,10 +39,16 @@ pub(super) struct Common {
     pub(super) id: Option<String>,
     pub(super) version: Option<String>,
     pub(super) notes: Option<String>,
-    pub(super) metadata: Option<Map<String, Value>>,
+    pub(super) metadata: Option<Metadata>,
 }
 
 impl RawTask {
+    /// The lenient wire form from a map of task fields. Every field is
+    /// `Option`, so only a non-object can fail.
+    pub(crate) fn from_fields(fields: Map<String, Value>) -> Result<RawTask, Error> {
+        serde_json::from_value(Value::Object(fields)).map_err(|_| wrong_type("a task", "an object"))
+    }
+
     /// Convert one tree task from its lenient raw form (nested `subtasks`).
     pub(crate) fn to_task(&self) -> Result<Task, Error> {
         let mut count = 0;

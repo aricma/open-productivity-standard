@@ -4,6 +4,7 @@ version = "0.0.0"
 edition = "2024"
 publish = false
 license = "MIT"
-description = "Generate ops/tests/acceptance from test-corpus"
+description = "Generate ops/tests/acceptance from specs/<version>/tests"
 
 [dependencies]
+ops-lib = { path = "../../ops" }

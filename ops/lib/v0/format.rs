@@ -1,10 +1,12 @@
+//! The formats this crate claims. Which formats a spec version defines is
+//! the specification's business; this is what `ops-lib` implements.
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Format {
     Json,
     Yaml,
     Jsonl,
     Csv,
-    Md,
 }
 
 impl Format {
@@ -14,7 +16,6 @@ impl Format {
             Format::Yaml => "yaml",
             Format::Jsonl => "jsonl",
             Format::Csv => "csv",
-            Format::Md => "md",
         }
     }
 
@@ -24,7 +25,6 @@ impl Format {
             "yaml" | "yml" => Format::Yaml,
             "jsonl" | "ndjson" => Format::Jsonl,
             "csv" => Format::Csv,
-            "md" | "markdown" => Format::Md,
             _ => return None,
         })
     }
@@ -36,17 +36,18 @@ mod tests {
 
     #[test]
     fn names_round_trip() {
-        for format in [
-            Format::Json,
-            Format::Yaml,
-            Format::Jsonl,
-            Format::Csv,
-            Format::Md,
-        ] {
+        for format in [Format::Json, Format::Yaml, Format::Jsonl, Format::Csv] {
             assert_eq!(Format::from_name(format.name()), Some(format));
         }
-        assert_eq!(Format::from_name("markdown"), Some(Format::Md));
         assert_eq!(Format::from_name("yml"), Some(Format::Yaml));
         assert_eq!(Format::from_name("toml"), None);
+    }
+
+    /// Markdown is a format the specification defines, but not one this
+    /// crate claims.
+    #[test]
+    fn markdown_is_not_a_format_this_crate_claims() {
+        assert_eq!(Format::from_name("markdown"), None);
+        assert_eq!(Format::from_name("md"), None);
     }
 }

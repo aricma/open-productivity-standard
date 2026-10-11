@@ -15,7 +15,7 @@ pub(crate) trait OpsDoc {
     /// per record for a flat stream.
     fn parse(self, input: &str) -> Result<Vec<RawTask>, Error>;
 
-    /// The model into this format's syntax. Tree formats require exactly
-    /// one root; flat formats accept any forest, including empty.
+    /// The model into this format's syntax. Any format accepts a forest,
+    /// including empty.
     fn write(self, tasks: &[Task]) -> Result<String, Error>;
 }

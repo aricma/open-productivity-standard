@@ -5,8 +5,8 @@
 //! `mask test --profile performance` (which adds `--nocapture`).
 
 use ops_lib::v0::limits::{MAX_CHILDREN, MAX_TASKS};
-use ops_lib::v0::{self, Format, Status, Task};
-use serde_json::{Map, Value, json};
+use ops_lib::v0::{self, Format, Metadata, Status, Task};
+use serde_json::json;
 use std::time::{Duration, Instant};
 
 /// Task counts to measure; anything the guardrails reject is skipped.
@@ -39,16 +39,14 @@ fn minimal_one(i: usize) -> Task {
 }
 
 fn dense_one(i: usize) -> Task {
-    let metadata: Map<String, Value> = json!({
+    let metadata: Metadata = serde_json::from_value(json!({
         "priority": "high",
         "tags": ["infra", "auth"],
         "count": i,
         "active": true,
         "nested": { "key": "value" },
-    })
-    .as_object()
-    .expect("object literal")
-    .clone();
+    }))
+    .expect("object literal");
     Task {
         title: format!("Task {i}"),
         status: if i.is_multiple_of(2) {

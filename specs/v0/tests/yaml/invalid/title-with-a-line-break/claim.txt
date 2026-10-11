@@ -1,0 +1,1 @@
+a task whose title contains a line break must be rejected.

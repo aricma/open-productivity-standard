@@ -1,0 +1,1 @@
+a task with an empty title must be rejected.

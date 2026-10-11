@@ -136,7 +136,7 @@ cargo deny check
 
 ## gen-corpus
 
-> Regenerate `ops/tests/acceptance/` from `test-corpus/`. Pass --check to verify only.
+> Regenerate `ops/tests/acceptance/` from `specs/<version>/tests/`. Pass --check to verify only.
 
 **OPTIONS**
 
@@ -183,12 +183,18 @@ set -eu
 export PATH="$MASKFILE_DIR/tmp/bin:$PATH"
 $MASK gen-corpus
 case "${profile:-essential}" in
-essential) cargo test --lib --test essentials ;;
+essential)
+    cargo test --lib --test essentials
+    cargo test -p gen-corpus
+    cargo test --doc
+    ;;
 acceptance) cargo test -p ops-lib --test acceptance ;;
 security) cargo test -p ops-lib --test security ;;
 performance) cargo test -p ops-lib --test performance -- --nocapture ;;
 all)
     cargo test --lib --test essentials
+    cargo test -p gen-corpus
+    cargo test --doc
     cargo test -p ops-lib --test acceptance
     cargo test -p ops-lib --test security
     cargo test -p ops-lib --test performance -- --nocapture
@@ -203,12 +209,18 @@ $env:PATH = "$env:MASKFILE_DIR\tmp\bin;$env:PATH"
 & $env:MASK gen-corpus; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 if (-not $profile) { $profile = "essential" }
 switch ($profile) {
-    "essential" { cargo test --lib --test essentials }
+    "essential" {
+        cargo test --lib --test essentials
+        cargo test -p gen-corpus
+        cargo test --doc
+    }
     "acceptance" { cargo test -p ops-lib --test acceptance }
     "security" { cargo test -p ops-lib --test security }
     "performance" { cargo test -p ops-lib --test performance -- --nocapture }
     "all" {
         cargo test --lib --test essentials
+        cargo test -p gen-corpus
+        cargo test --doc
         cargo test -p ops-lib --test acceptance
         cargo test -p ops-lib --test security
         cargo test -p ops-lib --test performance -- --nocapture
