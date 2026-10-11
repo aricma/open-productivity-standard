@@ -2,5 +2,10 @@
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn basic() {}
+
+#[rustfmt::skip]
+#[test]
+#[ignore = "unsupported format: markdown"]
+fn metadata_value_that_carries_nothing() {}

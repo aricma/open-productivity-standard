@@ -1,0 +1,1 @@
+a field that carries nothing — an empty string or null — is read as absent.

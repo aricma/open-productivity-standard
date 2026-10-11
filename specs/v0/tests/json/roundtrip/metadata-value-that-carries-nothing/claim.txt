@@ -1,0 +1,1 @@
+a metadata value that carries nothing — an empty string, list, map, or null — is read as absent.

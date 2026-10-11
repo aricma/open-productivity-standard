@@ -2,115 +2,125 @@
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn attachment_singular() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
+fn attachments_lone_string() {}
+
+#[rustfmt::skip]
+#[test]
+#[ignore = "unsupported format: markdown"]
+fn both_attachment_keys() {}
+
+#[rustfmt::skip]
+#[test]
+#[ignore = "unsupported format: markdown"]
 fn checkbox_and_heading_siblings() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn done_heading() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn done_parent_with_done_children() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn empty_document() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn escaped_done_marker() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn frontmatter_only() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn frontmatter_status_default() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn h2_only_forest() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn heading_less_checkboxes() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn heading_outline() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn heading_that_skips_a_level() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn headings_below_h1() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn leading_block_that_is_not_a_mapping() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn metadata_value_with_a_line_break() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn nested_checkbox_tree_with_metadata() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn nested_minimal_checkbox_tree() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn one_root_with_four_levels_of_tasks() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn one_root_with_one_level_of_tasks_with_bulleted_metadata() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn one_root_with_one_level_of_tasks_with_metadata_looking_notes() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn one_root_with_one_level_of_tasks_with_notes_list_items() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn one_root_with_zero_levels_of_tasks_with_root_metadata() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn two_h1_forest() {}

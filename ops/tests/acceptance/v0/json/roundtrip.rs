@@ -18,3 +18,41 @@ fn basic() {
         "specs/v0/tests/json/roundtrip/basic: A nested JSON document must round-trip through JSON without loss. (the exported model differs from the expectation)"
     );
 }
+
+#[rustfmt::skip]
+#[test]
+fn fields_that_carry_nothing_are_absent() {
+    let given = include_str!("../../../../../specs/v0/tests/json/roundtrip/fields-that-carry-nothing-are-absent/given.json");
+    let expected = include_str!("../../../../../specs/v0/tests/json/roundtrip/fields-that-carry-nothing-are-absent/expectation.json");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Json, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/json/roundtrip/fields-that-carry-nothing-are-absent: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Json, &tasks)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/json/roundtrip/fields-that-carry-nothing-are-absent: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Json, &out)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/json/roundtrip/fields-that-carry-nothing-are-absent: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Json, expected)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/json/roundtrip/fields-that-carry-nothing-are-absent: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "specs/v0/tests/json/roundtrip/fields-that-carry-nothing-are-absent: a field that carries nothing — an empty string or null — is read as absent. (the exported model differs from the expectation)"
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn metadata_value_that_carries_nothing() {
+    let given = include_str!("../../../../../specs/v0/tests/json/roundtrip/metadata-value-that-carries-nothing/given.json");
+    let expected = include_str!("../../../../../specs/v0/tests/json/roundtrip/metadata-value-that-carries-nothing/expectation.json");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Json, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/json/roundtrip/metadata-value-that-carries-nothing: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Json, &tasks)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/json/roundtrip/metadata-value-that-carries-nothing: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Json, &out)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/json/roundtrip/metadata-value-that-carries-nothing: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Json, expected)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/json/roundtrip/metadata-value-that-carries-nothing: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "specs/v0/tests/json/roundtrip/metadata-value-that-carries-nothing: a metadata value that carries nothing — an empty string, list, map, or null — is read as absent. (the exported model differs from the expectation)"
+    );
+}

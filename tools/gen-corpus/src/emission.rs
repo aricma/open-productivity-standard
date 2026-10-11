@@ -212,6 +212,13 @@ mod tests {
             given_ext: given.to_string(),
             given: format!("specs/v0/tests/place/given.{given}"),
             target_ext: target.map(str::to_string),
+            names: {
+                let mut names = vec![given.to_string()];
+                if let Some(target) = target {
+                    names.push(target.to_string());
+                }
+                names
+            },
             expectation: expectation.map(|ext| {
                 (
                     ext.to_string(),

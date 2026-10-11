@@ -1,0 +1,1 @@
+a plain scalar YAML resolves to a type the model does not carry is the string it was written as.

@@ -1,0 +1,1 @@
+attachments lone string must be accepted.

@@ -49,7 +49,7 @@ model cannot be written down in the format that refuses it.
 
 Comparison is semantic. The standard fixes field names and mappings, not
 key order, indentation, or trailing newline, so byte layout is not part of
-the contract.
+the contract. (RFC-031)
 
 Implementations that do not claim a format skip its cases and must report
 how many were skipped. Skipping is not passing.

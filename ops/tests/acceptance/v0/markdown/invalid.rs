@@ -2,35 +2,35 @@
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn done_task_with_open_subtask() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn empty_heading_title() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn metadata_value_with_a_raw_line_break() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn one_root_with_one_level_of_tasks_with_empty_title() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn one_root_with_zero_levels_of_tasks_with_duplicate_metadata_key() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn one_root_with_zero_levels_of_tasks_with_invalid_status() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn unknown_frontmatter_key() {}

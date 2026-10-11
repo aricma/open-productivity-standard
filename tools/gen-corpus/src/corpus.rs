@@ -69,13 +69,26 @@ fn read_case(root: &Path, dir: &Path, version: &str, format: Option<&str>, group
         .expectation
         .map(|path| (file_extension(&path), path_from_root(root, &path)));
 
-    // What the case writes: the expectation's format where there is one, and
-    // otherwise the target a conversion's name names, since a conversion that
-    // cannot be done has no document to point at.
-    let target_ext = match (&expectation, group) {
-        (Some((ext, _)), Group::Roundtrip | Group::Transform) => Some(ext.clone()),
-        (None, Group::Transform) => Some(transform_direction(&name).1),
+    // What the case writes: a conversion names its target in its directory
+    // name, and a round-trip writes its own format, which is the expectation's.
+    let target_ext = match (group, &expectation) {
+        (Group::Transform, _) => Some(transform_direction(&name).1),
+        (Group::Roundtrip, Some((ext, _))) => Some(ext.clone()),
         _ => None,
+    };
+    // A skip report names the format the way the corpus does — the folder, or
+    // the name a conversion's directory spells — so the same format is not
+    // reported as `md` in one case and `markdown` in another.
+    let names = match group {
+        Group::Transform => {
+            let (from, to) = transform_direction(&name);
+            vec![from, to]
+        }
+        Group::Valid | Group::Invalid | Group::Roundtrip => vec![
+            format
+                .expect("a case under a format folder names its format")
+                .to_string(),
+        ],
     };
 
     let case = Case {
@@ -87,6 +100,7 @@ fn read_case(root: &Path, dir: &Path, version: &str, format: Option<&str>, group
         given_ext: file_extension(&files.given),
         given: path_from_root(root, &files.given),
         target_ext,
+        names,
         expectation,
     };
 

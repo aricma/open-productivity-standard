@@ -18,3 +18,60 @@ fn basic() {
         "specs/v0/tests/yaml/roundtrip/basic: A nested YAML document must round-trip through YAML without loss. (the exported model differs from the expectation)"
     );
 }
+
+#[rustfmt::skip]
+#[test]
+fn fields_that_carry_nothing_are_absent() {
+    let given = include_str!("../../../../../specs/v0/tests/yaml/roundtrip/fields-that-carry-nothing-are-absent/given.yaml");
+    let expected = include_str!("../../../../../specs/v0/tests/yaml/roundtrip/fields-that-carry-nothing-are-absent/expectation.yaml");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Yaml, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/roundtrip/fields-that-carry-nothing-are-absent: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Yaml, &tasks)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/roundtrip/fields-that-carry-nothing-are-absent: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Yaml, &out)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/roundtrip/fields-that-carry-nothing-are-absent: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Yaml, expected)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/roundtrip/fields-that-carry-nothing-are-absent: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "specs/v0/tests/yaml/roundtrip/fields-that-carry-nothing-are-absent: a field that carries nothing — an empty string or null — is read as absent. (the exported model differs from the expectation)"
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn metadata_value_that_carries_nothing() {
+    let given = include_str!("../../../../../specs/v0/tests/yaml/roundtrip/metadata-value-that-carries-nothing/given.yaml");
+    let expected = include_str!("../../../../../specs/v0/tests/yaml/roundtrip/metadata-value-that-carries-nothing/expectation.yaml");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Yaml, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/roundtrip/metadata-value-that-carries-nothing: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Yaml, &tasks)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/roundtrip/metadata-value-that-carries-nothing: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Yaml, &out)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/roundtrip/metadata-value-that-carries-nothing: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Yaml, expected)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/roundtrip/metadata-value-that-carries-nothing: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "specs/v0/tests/yaml/roundtrip/metadata-value-that-carries-nothing: a metadata value that carries nothing — an empty string, list, map, or null — is read as absent. (the exported model differs from the expectation)"
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn plain_scalars_resolve_to_their_shapes() {
+    let given = include_str!("../../../../../specs/v0/tests/yaml/roundtrip/plain-scalars-resolve-to-their-shapes/given.yaml");
+    let expected = include_str!("../../../../../specs/v0/tests/yaml/roundtrip/plain-scalars-resolve-to-their-shapes/expectation.yaml");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Yaml, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/roundtrip/plain-scalars-resolve-to-their-shapes: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Yaml, &tasks)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/roundtrip/plain-scalars-resolve-to-their-shapes: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Yaml, &out)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/roundtrip/plain-scalars-resolve-to-their-shapes: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Yaml, expected)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/roundtrip/plain-scalars-resolve-to-their-shapes: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "specs/v0/tests/yaml/roundtrip/plain-scalars-resolve-to-their-shapes: a plain scalar YAML resolves to a type the model does not carry is the string it was written as. (the exported model differs from the expectation)"
+    );
+}

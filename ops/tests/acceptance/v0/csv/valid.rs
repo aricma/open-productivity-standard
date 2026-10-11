@@ -2,10 +2,50 @@
 
 #[rustfmt::skip]
 #[test]
+fn a_row_may_be_shorter_than_the_header() {
+    let given = include_str!("../../../../../specs/v0/tests/csv/valid/a-row-may-be-shorter-than-the-header/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/csv/valid/a-row-may-be-shorter-than-the-header: must be accepted — a row shorter than the header leaves the later cells absent.: {e}"));
+}
+
+#[rustfmt::skip]
+#[test]
 fn attachment_singular() {
     let given = include_str!("../../../../../specs/v0/tests/csv/valid/attachment-singular/given.csv");
     ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
         .unwrap_or_else(|e| panic!("specs/v0/tests/csv/valid/attachment-singular: must be accepted — attachment singular must be accepted.: {e}"));
+}
+
+#[rustfmt::skip]
+#[test]
+fn attachments_lone_string() {
+    let given = include_str!("../../../../../specs/v0/tests/csv/valid/attachments-lone-string/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/csv/valid/attachments-lone-string: must be accepted — attachments lone string must be accepted.: {e}"));
+}
+
+#[rustfmt::skip]
+#[test]
+fn attachments_plural_list() {
+    let given = include_str!("../../../../../specs/v0/tests/csv/valid/attachments-plural-list/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/csv/valid/attachments-plural-list: must be accepted — attachments plural list must be accepted.: {e}"));
+}
+
+#[rustfmt::skip]
+#[test]
+fn blank_lines_between_rows_are_skipped() {
+    let given = include_str!("../../../../../specs/v0/tests/csv/valid/blank-lines-between-rows-are-skipped/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/csv/valid/blank-lines-between-rows-are-skipped: must be accepted — blank lines between rows are skipped.: {e}"));
+}
+
+#[rustfmt::skip]
+#[test]
+fn both_attachment_keys() {
+    let given = include_str!("../../../../../specs/v0/tests/csv/valid/both-attachment-keys/given.csv");
+    ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/csv/valid/both-attachment-keys: must be accepted — both attachment keys must be accepted.: {e}"));
 }
 
 #[rustfmt::skip]

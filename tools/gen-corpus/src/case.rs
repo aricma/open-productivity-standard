@@ -49,8 +49,11 @@ pub(crate) struct Case {
     /// Relative to the repository root, for `include_str!`.
     pub(crate) given: String,
     /// What this case writes, if it writes at all: the format its result must
-    /// be in.
+    /// be in, as the name or extension the implementation is asked for.
     pub(crate) target_ext: Option<String>,
+    /// The formats this case exercises, as the corpus names them, so a skip
+    /// reads the same whether the case is filed under a format or named one.
+    pub(crate) names: Vec<String>,
     /// `(extension, path relative to the repository root)` of the document the
     /// result must equal. Absent from a conversion that must fail.
     pub(crate) expectation: Option<(String, String)>,
@@ -95,14 +98,11 @@ impl Case {
         (reads, writes)
     }
 
-    /// Every format name or extension this case exercises, the one it reads
-    /// first. A case runs only when all of them are claimed.
+    /// Every format this case exercises, named the way the corpus names it (the
+    /// folder, or the two a conversion's directory name names) and the one it
+    /// reads first. A case runs only when all of them are claimed.
     pub(crate) fn format_names(&self) -> Vec<&str> {
-        let mut names = vec![self.given_ext.as_str()];
-        if let Some(target) = &self.target_ext {
-            names.push(target);
-        }
-        names
+        self.names.iter().map(String::as_str).collect()
     }
 }
 
@@ -151,6 +151,13 @@ mod tests {
             given_ext: given.to_string(),
             given: format!("specs/v0/tests/place/given.{given}"),
             target_ext: target.map(str::to_string),
+            names: {
+                let mut names = vec![given.to_string()];
+                if let Some(target) = target {
+                    names.push(target.to_string());
+                }
+                names
+            },
             expectation: expectation.map(|ext| {
                 (
                     ext.to_string(),

@@ -10,10 +10,26 @@ fn attachment_singular() {
 
 #[rustfmt::skip]
 #[test]
+fn attachments_lone_string() {
+    let given = include_str!("../../../../../specs/v0/tests/yaml/valid/attachments-lone-string/given.yaml");
+    ops_lib::v0::read(ops_lib::v0::Format::Yaml, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/valid/attachments-lone-string: must be accepted — attachments lone string must be accepted.: {e}"));
+}
+
+#[rustfmt::skip]
+#[test]
 fn attachments_plural_list() {
     let given = include_str!("../../../../../specs/v0/tests/yaml/valid/attachments-plural-list/given.yaml");
     ops_lib::v0::read(ops_lib::v0::Format::Yaml, given)
         .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/valid/attachments-plural-list: must be accepted — attachments plural list must be accepted.: {e}"));
+}
+
+#[rustfmt::skip]
+#[test]
+fn both_attachment_keys() {
+    let given = include_str!("../../../../../specs/v0/tests/yaml/valid/both-attachment-keys/given.yaml");
+    ops_lib::v0::read(ops_lib::v0::Format::Yaml, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/yaml/valid/both-attachment-keys: must be accepted — both attachment keys must be accepted.: {e}"));
 }
 
 #[rustfmt::skip]

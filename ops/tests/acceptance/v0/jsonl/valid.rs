@@ -18,6 +18,22 @@ fn attachments_lone_string() {
 
 #[rustfmt::skip]
 #[test]
+fn attachments_plural_list() {
+    let given = include_str!("../../../../../specs/v0/tests/jsonl/valid/attachments-plural-list/given.jsonl");
+    ops_lib::v0::read(ops_lib::v0::Format::Jsonl, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/jsonl/valid/attachments-plural-list: must be accepted — attachments plural list must be accepted.: {e}"));
+}
+
+#[rustfmt::skip]
+#[test]
+fn both_attachment_keys() {
+    let given = include_str!("../../../../../specs/v0/tests/jsonl/valid/both-attachment-keys/given.jsonl");
+    ops_lib::v0::read(ops_lib::v0::Format::Jsonl, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/jsonl/valid/both-attachment-keys: must be accepted — both attachment keys must be accepted.: {e}"));
+}
+
+#[rustfmt::skip]
+#[test]
 fn done_parent_with_done_children() {
     let given = include_str!("../../../../../specs/v0/tests/jsonl/valid/done-parent-with-done-children/given.jsonl");
     ops_lib::v0::read(ops_lib::v0::Format::Jsonl, given)

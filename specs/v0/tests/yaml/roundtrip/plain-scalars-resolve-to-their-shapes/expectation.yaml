@@ -1,0 +1,14 @@
+title: Root
+status: open
+metadata:
+  yes_word: "yes"
+  on_word: "on"
+  n_word: "n"
+  zero_padded: "0755"
+  grouped: "1_000"
+  when: "2026-01-01T09:00:00Z"
+  infinite: ".inf"
+  negative_infinite: "-.inf"
+  not_a_number: ".nan"
+  boolean: true
+  number: 3

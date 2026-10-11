@@ -330,7 +330,7 @@ fn yaml_to_jsonl() {
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn json_to_markdown_line_break() {}
 
 #[rustfmt::skip]
@@ -340,10 +340,10 @@ fn json_to_markdown_notes_with_an_h1() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn markdown_to_json_key_outside_charset_is_a_note() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: md"]
+#[ignore = "unsupported format: markdown"]
 fn markdown_to_json_line_break() {}
