@@ -66,7 +66,12 @@ fn version_files(
     version: &str,
     implementation: &Implementation,
 ) -> Vec<(String, String)> {
-    let cases = corpus::read_cases(root, version, implementation);
+    // A case for a format this crate does not claim is not part of this
+    // tree: there is nothing here to test.
+    let cases: Vec<crate::case::Case> = corpus::read_cases(root, version, implementation)
+        .into_iter()
+        .filter(|case| case.is_claimed_by(implementation))
+        .collect();
     let mut files = Vec::new();
     let mut modules: BTreeSet<String> = BTreeSet::new();
 

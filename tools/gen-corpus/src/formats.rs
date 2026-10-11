@@ -9,9 +9,6 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
-/// A format this implementation does not claim.
-pub(crate) struct Unsupported(pub(crate) String);
-
 /// An implementation's declared formats.
 pub(crate) struct Implementation {
     /// The crate its modules live in, as a Rust path: `ops_lib`.

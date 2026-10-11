@@ -81,6 +81,14 @@ impl Case {
         self.group == Group::Transform && self.expectation.is_none()
     }
 
+    /// Whether every format this case needs is one the implementation claims.
+    /// A case whose format is not claimed is not generated at all.
+    pub(crate) fn is_claimed_by(&self, implementation: &Implementation) -> bool {
+        self.format_names()
+            .iter()
+            .all(|name| implementation.claims(name))
+    }
+
     /// The source paths this case reads from and writes to, as
     /// `ops_lib::v0::Format::…`. The write is absent when the case only reads.
     pub(crate) fn format_paths(
