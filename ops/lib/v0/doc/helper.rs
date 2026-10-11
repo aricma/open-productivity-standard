@@ -96,6 +96,7 @@ pub(crate) fn validate_forest(tasks: &[Task]) -> Result<(), ValidationError> {
 /// does not, and a nested format needs none at all. An empty id is no id, so it
 /// is not a reference: the writer refuses rather than let the child out as a
 /// root.
+#[cfg_attr(not(any(feature = "jsonl", feature = "csv")), allow(dead_code))]
 pub(crate) fn check_subtask_ids(tasks: &[Task]) -> Result<(), ValidationError> {
     fn walk(task: &Task) -> Result<(), ValidationError> {
         for child in &task.subtasks {
@@ -117,6 +118,7 @@ pub(crate) fn check_subtask_ids(tasks: &[Task]) -> Result<(), ValidationError> {
 
 /// Flatten a forest into records (pre-order, root first), shared by the
 /// JSONL and CSV writers.
+#[cfg_attr(not(any(feature = "jsonl", feature = "csv")), allow(dead_code))]
 pub(crate) fn records(tasks: &[Task]) -> Vec<FlatTask> {
     let mut out = Vec::new();
     for t in tasks {
@@ -125,6 +127,7 @@ pub(crate) fn records(tasks: &[Task]) -> Vec<FlatTask> {
     out
 }
 
+#[cfg_attr(not(any(feature = "jsonl", feature = "csv")), allow(dead_code))]
 fn flatten(task: &Task, out: &mut Vec<FlatTask>) {
     out.push(FlatTask::from_task(task));
     for child in &task.subtasks {
@@ -135,6 +138,7 @@ fn flatten(task: &Task, out: &mut Vec<FlatTask>) {
 /// Rebuild a forest from flat records, enforcing the graph rules:
 /// unique ids, every referenced id exists, one parent per task, no
 /// cycles, `version` on roots only.
+#[cfg_attr(not(any(feature = "jsonl", feature = "csv")), allow(dead_code))]
 pub(crate) fn forest(records: Vec<FlatTask>) -> Result<Vec<Task>, Error> {
     check(Limit::Tasks, records.len()).map_err(Error::Validation)?;
     let n = records.len();
@@ -195,6 +199,7 @@ pub(crate) fn forest(records: Vec<FlatTask>) -> Result<Vec<Task>, Error> {
     Ok(roots)
 }
 
+#[cfg_attr(not(any(feature = "jsonl", feature = "csv")), allow(dead_code))]
 fn build_tree(
     records: &[FlatTask],
     children: &[Vec<usize>],

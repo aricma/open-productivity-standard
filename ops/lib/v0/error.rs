@@ -274,11 +274,16 @@ mod tests {
 
     #[test]
     fn syntax_errors_share_one_code() {
-        assert_eq!(Error::syntax(Format::Csv, "x").code(), "invalid-syntax");
-        assert_eq!(
-            Error::syntax(Format::Json, "x").to_string(),
-            "invalid JSON: x"
-        );
+        for &format in Format::ALL {
+            let error = Error::syntax(format, "x");
+            assert_eq!(error.code(), "invalid-syntax");
+            assert!(
+                error
+                    .to_string()
+                    .starts_with(&format!("invalid {}: ", format.display_name())),
+                "{error}"
+            );
+        }
     }
 
     #[test]
@@ -296,7 +301,8 @@ mod tests {
             Error::Validation(ValidationError::MissingTitle).code(),
             "missing-title"
         );
-        assert_eq!(Error::syntax(Format::Json, "bad").code(), "invalid-syntax");
-        assert_eq!(Error::syntax(Format::Yaml, "bad").code(), "invalid-syntax");
+        for &format in Format::ALL {
+            assert_eq!(Error::syntax(format, "bad").code(), "invalid-syntax");
+        }
     }
 }

@@ -18,6 +18,10 @@ All notable changes to `ops-lib` are documented here, following
   `Number`.
 - `Format` claims JSON, YAML, JSONL, and CSV, with `Format::ALL`, `name()`,
   `display_name()`, `from_name()`, and `nests()` for the tree and flat families.
+- One cargo feature per format, all on by default, so a build can claim a
+  subset: a format whose feature is off has no `Format` variant, its code is not
+  compiled in, and its dependency is not pulled in — `yaml` is the only one with
+  a dependency of its own. At least one format is required.
 - `v0::detect_version(Format, &str)` reads the version a document declares,
   matching it against nothing, under the same input bound as `read`.
 - `Error` and `ValidationError` carry stable, library-defined codes

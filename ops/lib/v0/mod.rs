@@ -1,8 +1,8 @@
 //! OPS version 0: the reader and writer for
 //! [the version-0 model](../../../specs/v0/model.md).
 //!
-//! The task model (one task type, nested arbitrarily deep) and these
-//! formats:
+//! The task model (one task type, nested arbitrarily deep) and whichever of
+//! these formats the build enables, one cargo feature each:
 //!
 //! - tree-preserving: JSON, YAML
 //! - flat/streamable: JSONL, CSV
@@ -20,10 +20,14 @@ pub(crate) mod doc;
 pub(crate) mod model;
 
 use doc::OpsDoc;
+#[cfg(feature = "csv")]
 use doc::csv::Csv;
 use doc::helper::{check_subtask_ids, forest, validate_forest};
+#[cfg(feature = "json")]
 use doc::json::Json;
+#[cfg(feature = "jsonl")]
 use doc::jsonl::Jsonl;
+#[cfg(feature = "yaml")]
 use doc::yaml::Yaml;
 use limits::{Limit, check};
 use model::raw_task::RawTask;
@@ -37,10 +41,14 @@ pub use model::value::{Metadata, MetadataValue, Number};
 /// Imports a version-0 OPS document in `format` into valid tasks.
 pub fn read(format: Format, input: &str) -> Result<Vec<Task>, Error> {
     check(Limit::InputBytes, input.len()).map_err(Error::Validation)?;
-    let raw = match format {
+    let raw: Vec<RawTask> = match format {
+        #[cfg(feature = "json")]
         Format::Json => Json.parse(input)?,
+        #[cfg(feature = "yaml")]
         Format::Yaml => Yaml.parse(input)?,
+        #[cfg(feature = "jsonl")]
         Format::Jsonl => Jsonl.parse(input)?,
+        #[cfg(feature = "csv")]
         Format::Csv => Csv.parse(input)?,
     };
     let tasks = if format.nests() {
@@ -76,10 +84,14 @@ pub fn write(format: Format, tasks: &[Task]) -> Result<String, Error> {
         // A flat document references tasks by id, so every subtask needs one.
         check_subtask_ids(tasks).map_err(Error::Validation)?;
     }
-    let doc = match format {
+    let doc: String = match format {
+        #[cfg(feature = "json")]
         Format::Json => Json.write(tasks),
+        #[cfg(feature = "yaml")]
         Format::Yaml => Yaml.write(tasks),
+        #[cfg(feature = "jsonl")]
         Format::Jsonl => Jsonl.write(tasks),
+        #[cfg(feature = "csv")]
         Format::Csv => Csv.write(tasks),
     }?;
     // A document we would refuse to read back is not worth writing.

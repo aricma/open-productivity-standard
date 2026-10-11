@@ -10,6 +10,9 @@
 #
 #   <the name the standard documents> <the Format variant> [<file extension>]
 #
+# The name is also the cargo feature: a build without it does not claim the
+# format, and `yaml` is the one feature that pulls a parser in.
+#
 # The extension is only needed when it differs from the format's name, which is
 # how a future Markdown profile would read `given.md` while being documented as
 # `formats/markdown.md`:

@@ -32,6 +32,17 @@ A Rust reader/writer for the
   document size, task count, nesting depth, and field and metadata sizes,
   so hostile input is rejected with a coded error instead of exhausting
   memory or the stack.
+- **One cargo feature per format** (`json`, `yaml`, `jsonl`, `csv`, all on
+  by default). A build that does not enable a format does not claim it: the
+  `Format` variant is gone and so is the code that reads it, which is what
+  lets `yaml` be the only format that pulls a parser in. `Format::ALL`
+  lists what the build has.
+
+  ```toml
+  ops-lib = { version = "0.1", default-features = false, features = ["json"] }
+  ```
+
+  At least one format is required; a build with none refuses to compile.
 
 ## Repository layout
 
@@ -41,7 +52,7 @@ This crate is one half of the OPS monorepo; the standard lives in
 ```
 ops/
 ├── Cargo.toml           the crate manifest
-├── formats.txt          the formats this crate claims, and its Rust path
+├── formats.txt          the formats this crate claims, one feature each
 ├── lib/                 the library (source only)
 │   ├── lib.rs           crate root: the versioned public surface
 │   ├── shared/          helpers shared by every spec version

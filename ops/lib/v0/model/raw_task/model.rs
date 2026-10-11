@@ -50,11 +50,13 @@ impl RawTask {
     }
 
     /// Convert one tree task from its lenient raw form (nested `subtasks`).
+    #[cfg_attr(not(any(feature = "json", feature = "yaml")), allow(dead_code))]
     pub(crate) fn to_task(&self) -> Result<Task, Error> {
         let mut count = 0;
         self.build_tree(0, &mut count)
     }
 
+    #[cfg_attr(not(any(feature = "json", feature = "yaml")), allow(dead_code))]
     fn build_tree(&self, depth: usize, count: &mut usize) -> Result<Task, Error> {
         check(Limit::Depth, depth).map_err(Error::Validation)?;
         let common = common(self)?;
@@ -84,6 +86,7 @@ impl RawTask {
 
     /// Convert one flat record from its lenient raw form (`subtasks` is a
     /// list of child ids).
+    #[cfg_attr(not(any(feature = "jsonl", feature = "csv")), allow(dead_code))]
     pub(crate) fn to_flat_task(&self) -> Result<FlatTask, Error> {
         let common = common(self)?;
         let subtasks = match &self.subtasks {

@@ -52,7 +52,7 @@ fn full_model() -> Task {
 
 #[test]
 fn full_model_roundtrips_through_every_format() {
-    for format in Format::ALL {
+    for &format in Format::ALL {
         let out = ops_lib::v0::write(format, &[full_model()]).unwrap();
         assert_eq!(
             ops_lib::v0::read(format, &out).unwrap(),
@@ -68,7 +68,7 @@ fn writing_is_idempotent() {
     // A formatter (or a `--fix`) rewrites a file it just wrote; the bytes
     // must not churn. Byte layout is per implementation — OPS fixes the
     // model, not the bytes — so this checks stability, not a canonical form.
-    for format in Format::ALL {
+    for &format in Format::ALL {
         let first = ops_lib::v0::write(format, &[full_model()]).unwrap();
         let parsed = ops_lib::v0::read(format, &first).unwrap();
         let again = ops_lib::v0::write(format, &parsed).unwrap();
@@ -165,7 +165,7 @@ fn a_value_that_carries_nothing_is_not_written() {
         ..Default::default()
     }];
 
-    for format in Format::ALL {
+    for &format in Format::ALL {
         let first = ops_lib::v0::write(format, &written)
             .unwrap_or_else(|e| panic!("{}: {e}", format.name()));
         let back =

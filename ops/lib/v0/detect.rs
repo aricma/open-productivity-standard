@@ -1,6 +1,7 @@
 //! Finds the `version` a document declares without knowing any OPS version.
 //! The field name is fixed, so a syntax-only scan is enough.
 
+#[cfg(feature = "csv")]
 use crate::v0::doc::csv::read_records;
 use crate::v0::error::Error;
 use crate::v0::format::Format;
@@ -15,13 +16,18 @@ use crate::v0::limits::{Limit, check};
 pub(crate) fn detect_version(format: Format, input: &str) -> Result<Option<String>, Error> {
     check(Limit::InputBytes, input.len()).map_err(Error::Validation)?;
     Ok(match format {
+        #[cfg(feature = "json")]
         Format::Json => json_version(input)?,
+        #[cfg(feature = "yaml")]
         Format::Yaml => yaml_version(input)?,
+        #[cfg(feature = "jsonl")]
         Format::Jsonl => jsonl_version(input)?,
+        #[cfg(feature = "csv")]
         Format::Csv => csv_version(input)?,
     })
 }
 
+#[cfg(any(feature = "json", feature = "yaml", feature = "jsonl"))]
 fn value_version(value: &serde_json::Value) -> Option<String> {
     let found = match value {
         serde_json::Value::Object(map) => map.get("version"),
@@ -36,12 +42,14 @@ fn value_version(value: &serde_json::Value) -> Option<String> {
     }
 }
 
+#[cfg(feature = "json")]
 fn json_version(input: &str) -> Result<Option<String>, Error> {
     let value: serde_json::Value =
         serde_json::from_str(input).map_err(|e| Error::syntax(Format::Json, e.to_string()))?;
     Ok(value_version(&value))
 }
 
+#[cfg(feature = "yaml")]
 fn yaml_version(input: &str) -> Result<Option<String>, Error> {
     let value: serde_yaml::Value =
         serde_yaml::from_str(input).map_err(|e| Error::syntax(Format::Yaml, e.to_string()))?;
@@ -50,6 +58,7 @@ fn yaml_version(input: &str) -> Result<Option<String>, Error> {
     Ok(value_version(&json))
 }
 
+#[cfg(feature = "jsonl")]
 fn jsonl_version(input: &str) -> Result<Option<String>, Error> {
     for line in input.lines().filter(|l| !l.trim().is_empty()) {
         let value: serde_json::Value =
@@ -61,6 +70,7 @@ fn jsonl_version(input: &str) -> Result<Option<String>, Error> {
     Ok(None)
 }
 
+#[cfg(feature = "csv")]
 fn csv_version(input: &str) -> Result<Option<String>, Error> {
     let rows = read_records(input)?;
     let Some(header) = rows.first() else {
@@ -76,6 +86,7 @@ fn csv_version(input: &str) -> Result<Option<String>, Error> {
         .cloned())
 }
 
+#[cfg(all(feature = "json", feature = "yaml", feature = "jsonl", feature = "csv"))]
 #[cfg(test)]
 mod tests {
     #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
