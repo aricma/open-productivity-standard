@@ -225,7 +225,15 @@ impl OpsDoc for Csv {
         let mut keys: BTreeSet<String> = BTreeSet::new();
         for row in &rows {
             if let Some(metadata) = &row.metadata {
-                keys.extend(metadata.keys().cloned());
+                // A key whose value carries nothing is not a key: the reader
+                // would read it as absent, so a column for it would be a column
+                // the next write does not have.
+                keys.extend(
+                    metadata
+                        .iter()
+                        .filter(|(_, value)| !value.carries_nothing())
+                        .map(|(key, _)| key.clone()),
+                );
             }
         }
 
@@ -337,6 +345,9 @@ fn row_to_raw(header: &[Column], row: &[String]) -> Result<RawTask, Error> {
         match column {
             Column::Field("metadata") => match serde_json::from_str::<Value>(text) {
                 Ok(Value::Object(map)) => json_metadata = Some(map),
+                // A field written as `null` carries nothing, so the field is
+                // absent rather than a second way to write an empty map.
+                Ok(Value::Null) => {}
                 _ => {
                     return Err(Error::Validation(ValidationError::InvalidFieldType {
                         field: "metadata",

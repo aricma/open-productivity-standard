@@ -9,7 +9,12 @@ use crate::v0::model::task::Task;
 /// Enforces the version rules: one version per document. Every declared
 /// version must be identical and an official release.
 pub(crate) fn check_document_versions(tasks: &[Task]) -> Result<(), Error> {
-    let mut declared: Vec<&str> = tasks.iter().filter_map(|t| t.version.as_deref()).collect();
+    // A declaration that carries nothing is no declaration, like an empty id.
+    let mut declared: Vec<&str> = tasks
+        .iter()
+        .filter_map(|t| t.version.as_deref())
+        .filter(|version| !version.is_empty())
+        .collect();
     declared.sort_unstable();
     declared.dedup();
     if let [first, second, ..] = declared.as_slice() {

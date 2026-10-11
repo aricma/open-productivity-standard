@@ -17,6 +17,19 @@ pub(crate) fn string_field(value: &Value, field: &'static str) -> Result<String,
         .ok_or_else(|| wrong_type(field, "a string"))
 }
 
+/// An optional string field. A field that is present but carries nothing — an
+/// empty string — is read as absent, the same as `null`.
+pub(crate) fn optional_string_field(
+    value: Option<&Value>,
+    field: &'static str,
+) -> Result<Option<String>, Error> {
+    let text = match value {
+        None => return Ok(None),
+        Some(value) => string_field(value, field)?,
+    };
+    Ok((!text.is_empty()).then_some(text))
+}
+
 pub(crate) fn status_from(value: &Value) -> Result<Status, Error> {
     match value.as_str() {
         Some("open") => Ok(Status::Open),

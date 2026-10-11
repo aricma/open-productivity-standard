@@ -59,10 +59,10 @@ fn walk(
             check(Limit::MetadataValue, metadata_value_bytes(value))?;
         }
     }
-    if let Some(id) = &task.id
-        && !ids.insert(id.clone())
+    if let Some(id) = task.id.as_deref().filter(|id| !id.is_empty())
+        && !ids.insert(id.to_owned())
     {
-        return Err(ValidationError::DuplicateId(id.clone()));
+        return Err(ValidationError::DuplicateId(id.to_owned()));
     }
     if task.status == Status::Done
         && let Some(child) = task.subtasks.iter().find(|c| c.status != Status::Done)
@@ -72,7 +72,7 @@ fn walk(
             subtask: child.title.clone(),
         });
     }
-    if depth > 0 && task.version.is_some() {
+    if depth > 0 && task.version.as_deref().is_some_and(|v| !v.is_empty()) {
         return Err(ValidationError::VersionOnSubtask(task.title.clone()));
     }
     for child in &task.subtasks {
@@ -93,11 +93,13 @@ pub(crate) fn validate_forest(tasks: &[Task]) -> Result<(), ValidationError> {
 }
 
 /// A flat format references tasks by id, so every subtask needs one. A root
-/// does not, and a nested format needs none at all.
+/// does not, and a nested format needs none at all. An empty id is no id, so it
+/// is not a reference: the writer refuses rather than let the child out as a
+/// root.
 pub(crate) fn check_subtask_ids(tasks: &[Task]) -> Result<(), ValidationError> {
     fn walk(task: &Task) -> Result<(), ValidationError> {
         for child in &task.subtasks {
-            if child.id.is_none() {
+            if child.id.as_deref().is_none_or(str::is_empty) {
                 return Err(ValidationError::SubtaskWithoutId {
                     task: task.title.clone(),
                     subtask: child.title.clone(),
@@ -138,10 +140,13 @@ pub(crate) fn forest(records: Vec<FlatTask>) -> Result<Vec<Task>, Error> {
     let n = records.len();
     let mut by_id: HashMap<String, usize> = HashMap::new();
     for (i, r) in records.iter().enumerate() {
-        if let Some(id) = &r.id
-            && by_id.insert(id.clone(), i).is_some()
+        // An empty id is no id, so it names nothing and collides with nothing.
+        if let Some(id) = r.id.as_deref().filter(|id| !id.is_empty())
+            && by_id.insert(id.to_owned(), i).is_some()
         {
-            return Err(Error::Validation(ValidationError::DuplicateId(id.clone())));
+            return Err(Error::Validation(ValidationError::DuplicateId(
+                id.to_owned(),
+            )));
         }
     }
 
@@ -166,7 +171,7 @@ pub(crate) fn forest(records: Vec<FlatTask>) -> Result<Vec<Task>, Error> {
     }
 
     for (i, r) in records.iter().enumerate() {
-        if referenced[i] && r.version.is_some() {
+        if referenced[i] && r.version.as_deref().is_some_and(|v| !v.is_empty()) {
             return Err(Error::Validation(ValidationError::VersionOnSubtask(
                 r.title.clone(),
             )));

@@ -6,12 +6,13 @@
 //! case rule, no language — so these types only keep the shape, and are
 //! (de)serialized through `serde_json` internally.
 
+use serde::ser::SerializeMap;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::BTreeMap;
 use std::fmt;
 
 /// A metadata map: keys to values, ordered by key.
-#[derive(Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Default, PartialEq, Deserialize)]
 pub struct Metadata(BTreeMap<String, MetadataValue>);
 
 /// One metadata value: a string, number, boolean, `null`, list, or map.
@@ -64,10 +65,6 @@ impl Metadata {
         self.0.iter()
     }
 
-    pub fn keys(&self) -> impl Iterator<Item = &String> {
-        self.0.keys()
-    }
-
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -78,6 +75,19 @@ impl Metadata {
 }
 
 impl MetadataValue {
+    /// Whether this value carries nothing: `null`, or an empty string, list, or
+    /// map. A reader reads such a value as absent, so a writer leaves it out.
+    /// (rule 6, RFC-027)
+    pub(crate) fn carries_nothing(&self) -> bool {
+        match self {
+            MetadataValue::Null => true,
+            MetadataValue::String(text) => text.is_empty(),
+            MetadataValue::List(items) => items.is_empty(),
+            MetadataValue::Map(map) => map.is_empty(),
+            MetadataValue::Bool(_) | MetadataValue::Number(_) => false,
+        }
+    }
+
     /// A value read from JSON. Internal: a caller outside the crate
     /// bridges through serde's `Deserialize` instead.
     pub(crate) fn from_json(value: serde_json::Value) -> MetadataValue {
@@ -206,6 +216,37 @@ impl fmt::Debug for Number {
     }
 }
 
+/// Serde predicate: a string field that carries nothing is left out, since a
+/// reader reads it as absent.
+pub(crate) fn absent_string(value: &Option<String>) -> bool {
+    value.as_deref().is_none_or(str::is_empty)
+}
+
+/// Serde predicate: metadata that carries nothing is left out, like a value
+/// that carries nothing.
+pub(crate) fn absent_metadata(value: &Option<Metadata>) -> bool {
+    value.as_ref().is_none_or(Metadata::is_empty)
+}
+
+/// A map is written without the values that carry nothing: the reader reads
+/// them as absent, so writing one would not survive a round trip. (RFC-027)
+impl Serialize for Metadata {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let written = self
+            .0
+            .values()
+            .filter(|value| !value.carries_nothing())
+            .count();
+        let mut map = serializer.serialize_map(Some(written))?;
+        for (key, value) in &self.0 {
+            if !value.carries_nothing() {
+                map.serialize_entry(key, value)?;
+            }
+        }
+        map.end()
+    }
+}
+
 impl Serialize for MetadataValue {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
@@ -235,8 +276,10 @@ mod tests {
 
     #[test]
     fn every_shape_round_trips_through_json() {
+        // No `null` entry: a value that carries nothing is not written (see
+        // `serializing_metadata_leaves_out_what_carries_nothing`). A `null`
+        // nested inside a value is data, and stays.
         let json = serde_json::json!({
-            "null": null,
             "bool": true,
             "int": -9007199254740993_i64,
             "uint": 18446744073709551615_u64,
@@ -265,6 +308,22 @@ mod tests {
             .unwrap();
         assert_eq!(big.as_u64(), Some(9007199254740993));
         assert_eq!(small.as_i64(), Some(-9007199254740993));
+    }
+
+    /// A value that carries nothing is not part of a document: the writer
+    /// leaves it out, since a reader would drop it anyway.
+    #[test]
+    fn serializing_metadata_leaves_out_what_carries_nothing() {
+        let mut metadata = Metadata::new();
+        metadata.insert("priority".into(), MetadataValue::String("high".into()));
+        metadata.insert("blank".into(), MetadataValue::String(String::new()));
+        metadata.insert("nothing".into(), MetadataValue::Null);
+        metadata.insert("none".into(), MetadataValue::List(Vec::new()));
+        metadata.insert("void".into(), MetadataValue::Map(Metadata::new()));
+        assert_eq!(
+            serde_json::to_value(&metadata).unwrap(),
+            serde_json::json!({ "priority": "high" })
+        );
     }
 
     #[test]

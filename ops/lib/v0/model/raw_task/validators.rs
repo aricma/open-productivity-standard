@@ -3,8 +3,8 @@
 
 use super::model::{Common, RawTask};
 use crate::v0::error::{Error, ValidationError};
-use crate::v0::model::fields::{status_from, string_field, wrong_type};
-use crate::v0::model::value::{Metadata, MetadataValue};
+use crate::v0::model::fields::{optional_string_field, status_from, string_field, wrong_type};
+use crate::v0::model::value::Metadata;
 use serde_json::{Map, Value};
 
 fn metadata_from(value: Option<&Value>) -> Result<Option<Metadata>, Error> {
@@ -12,21 +12,10 @@ fn metadata_from(value: Option<&Value>) -> Result<Option<Metadata>, Error> {
         None => Ok(None),
         Some(Value::Object(map)) => {
             let mut out = Metadata::from_json_map(map.clone());
-            out.retain(|_, v| !empty_value(v));
+            out.retain(|_, value| !value.carries_nothing());
             Ok(if out.is_empty() { None } else { Some(out) })
         }
         Some(_) => Err(wrong_type("metadata", "an object")),
-    }
-}
-
-/// A value that carries nothing: `null`, or an empty string, list, or map.
-fn empty_value(v: &MetadataValue) -> bool {
-    match v {
-        MetadataValue::Null => true,
-        MetadataValue::String(s) => s.is_empty(),
-        MetadataValue::List(a) => a.is_empty(),
-        MetadataValue::Map(o) => o.is_empty(),
-        _ => false,
     }
 }
 
@@ -50,17 +39,9 @@ pub(super) fn common(raw: &RawTask) -> Result<Common, Error> {
         None => return Err(Error::Validation(ValidationError::MissingStatus)),
         Some(ref value) => status_from(value)?,
     };
-    let id = raw.id.as_ref().map(|v| string_field(v, "id")).transpose()?;
-    let version = raw
-        .version
-        .as_ref()
-        .map(|v| string_field(v, "version"))
-        .transpose()?;
-    let notes = raw
-        .notes
-        .as_ref()
-        .map(|v| string_field(v, "notes"))
-        .transpose()?;
+    let id = optional_string_field(raw.id.as_ref(), "id")?;
+    let version = optional_string_field(raw.version.as_ref(), "version")?;
+    let notes = optional_string_field(raw.notes.as_ref(), "notes")?;
     Ok(Common {
         title,
         status,

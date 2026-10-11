@@ -52,7 +52,7 @@ fn full_model() -> Task {
 
 #[test]
 fn full_model_roundtrips_through_every_format() {
-    for format in [Format::Json, Format::Yaml, Format::Jsonl] {
+    for format in Format::ALL {
         let out = ops_lib::v0::write(format, &[full_model()]).unwrap();
         assert_eq!(
             ops_lib::v0::read(format, &out).unwrap(),
@@ -68,7 +68,7 @@ fn writing_is_idempotent() {
     // A formatter (or a `--fix`) rewrites a file it just wrote; the bytes
     // must not churn. Byte layout is per implementation — OPS fixes the
     // model, not the bytes — so this checks stability, not a canonical form.
-    for format in [Format::Json, Format::Yaml, Format::Jsonl] {
+    for format in Format::ALL {
         let first = ops_lib::v0::write(format, &[full_model()]).unwrap();
         let parsed = ops_lib::v0::read(format, &first).unwrap();
         let again = ops_lib::v0::write(format, &parsed).unwrap();
@@ -134,6 +134,85 @@ fn invalid_models_are_rejected_before_writing() {
     for (tasks, code) in invalid {
         let err = ops_lib::v0::write(Format::Json, &tasks).unwrap_err();
         assert_eq!(err.code(), code);
+    }
+}
+
+/// A value that carries nothing — an empty string, list, map, or `null` — is
+/// absent, in `metadata` and in the fields that can hold an empty string. So a
+/// writer leaves it out, and a model that came back from the reader writes the
+/// same bytes again.
+#[test]
+fn a_value_that_carries_nothing_is_not_written() {
+    let mut metadata = Metadata::new();
+    metadata.insert("priority".into(), MetadataValue::String("high".into()));
+    metadata.insert("blank".into(), MetadataValue::String(String::new()));
+    metadata.insert("nothing".into(), MetadataValue::Null);
+    metadata.insert("none".into(), MetadataValue::List(Vec::new()));
+    metadata.insert("void".into(), MetadataValue::Map(Metadata::new()));
+    let written = vec![Task {
+        title: "Root".into(),
+        status: Status::Open,
+        id: Some(String::new()),
+        version: Some(String::new()),
+        notes: Some(String::new()),
+        metadata: Some(metadata),
+        ..Default::default()
+    }];
+    let expected = vec![Task {
+        title: "Root".into(),
+        status: Status::Open,
+        metadata: Some(meta(json!({ "priority": "high" }))),
+        ..Default::default()
+    }];
+
+    for format in Format::ALL {
+        let first = ops_lib::v0::write(format, &written)
+            .unwrap_or_else(|e| panic!("{}: {e}", format.name()));
+        let back =
+            ops_lib::v0::read(format, &first).unwrap_or_else(|e| panic!("{}: {e}", format.name()));
+        assert_eq!(
+            back,
+            expected,
+            "{} carried a value that says nothing into the model",
+            format.name()
+        );
+        assert_eq!(
+            ops_lib::v0::write(format, &back).unwrap(),
+            first,
+            "{}: write -> read -> write is not byte-stable",
+            format.name()
+        );
+    }
+}
+
+/// A flat format carries the hierarchy in id lists, and an empty id is no id at
+/// all, so a subtask with one cannot be referenced: the writer refuses rather
+/// than emitting a document that reads back differently.
+#[test]
+fn a_flat_write_refuses_a_subtask_with_an_empty_id() {
+    let mut root = Task::new("Root".into(), Status::Open);
+    root.id = Some("r".into());
+    let mut child = Task::new("Child".into(), Status::Open);
+    child.id = Some(String::new());
+    root.subtasks = vec![child];
+
+    for format in [Format::Jsonl, Format::Csv] {
+        assert_eq!(
+            ops_lib::v0::write(format, &[root.clone()])
+                .unwrap_err()
+                .code(),
+            "subtask-without-id",
+            "{}",
+            format.name()
+        );
+    }
+
+    // A tree format carries the hierarchy itself, and reads the empty id as no
+    // id: the child comes back without one.
+    for format in [Format::Json, Format::Yaml] {
+        let out = ops_lib::v0::write(format, &[root.clone()]).unwrap();
+        let back = ops_lib::v0::read(format, &out).unwrap();
+        assert_eq!(back[0].subtasks[0].id, None, "{}", format.name());
     }
 }
 
@@ -443,6 +522,10 @@ fn generated_models_round_trip_through_every_format() {
                 .unwrap_or_else(|e| panic!("seed {seed}: write {}: {e}", format.name()));
             let back = ops_lib::v0::read(format, &doc)
                 .unwrap_or_else(|e| panic!("seed {seed}: read {}: {e}\n{doc}", format.name()));
+            // A value that carries nothing is not a fixed point: the reader
+            // reads it as absent and the writer leaves it out, so this
+            // generator makes none (see
+            // `a_value_that_carries_nothing_is_not_written`).
             assert_eq!(
                 back,
                 model,
