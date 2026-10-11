@@ -14,17 +14,32 @@ use crate::v0::model::value::MetadataValue;
 /// case, so real documents never approach it.
 pub const MAX_INPUT_BYTES: usize = 16 * 1024 * 1024;
 
+/// The whole document this library will write. The same bound as reading,
+/// because a document we would refuse to read back is not worth writing:
+/// a writer must not emit something its own reader rejects.
+pub const MAX_OUTPUT_BYTES: usize = MAX_INPUT_BYTES;
+
 /// Tasks per document (tree nodes, or flat records). 10x the largest
 /// performance scale, so the suite sits well inside it and can grow an
 /// order of magnitude; bounds the flat path's id/child maps.
 pub const MAX_TASKS: usize = 100_000;
 
-/// Task nesting, root = 0. Below the recursion budget of the tree walks
-/// and serde's serializer, and above the ~64 levels the tree parsers
-/// already accept, so it never contradicts an accepted tree document.
-/// Measured safe at depth 512 on a 1 MiB thread, where 768 overflows, so
-/// 256 leaves a 3x margin.
-pub const MAX_DEPTH: usize = 256;
+/// Task nesting, root = 0. One number for every format, set by the deepest
+/// nesting a *tree* document can be parsed back from. The tree parsers' own
+/// recursion budget allows about 64 levels of task nesting, and the exact edge
+/// moves with the document's shape (a forest of two or more roots is wrapped in
+/// an array, so it runs out one level earlier) and with the format, so this
+/// takes three quarters of the budget rather than pinning the bound to a
+/// dependency's internal accounting. A writer must not emit a deeper tree than
+/// a reader accepts, and `read` and `write` have to agree on one number.
+///
+/// The flat formats could nest deeper, since their hierarchy is a reference
+/// list rather than a parse tree, but a single bound keeps the formats in step,
+/// and 48 levels is far past any real hierarchy.
+///
+/// Also well inside this library's own recursion budget: measured safe at
+/// depth 512 on a 1 MiB thread, where 768 overflows.
+pub const MAX_DEPTH: usize = 48;
 
 /// Subtasks on one task. `MAX_TASKS / 10`: one node with more direct
 /// children than a tenth of the document's task budget is pathological,
@@ -66,6 +81,7 @@ pub const MAX_METADATA_VALUE_BYTES: usize = 65_536;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Limit {
     InputBytes,
+    OutputBytes,
     Tasks,
     Depth,
     Children,
@@ -83,6 +99,7 @@ impl Limit {
     pub const fn max(self) -> usize {
         match self {
             Limit::InputBytes => MAX_INPUT_BYTES,
+            Limit::OutputBytes => MAX_OUTPUT_BYTES,
             Limit::Tasks => MAX_TASKS,
             Limit::Depth => MAX_DEPTH,
             Limit::Children => MAX_CHILDREN,
@@ -99,7 +116,7 @@ impl Limit {
     /// What the limit applies to, for the error message.
     pub const fn name(self) -> &'static str {
         match self {
-            Limit::InputBytes => "the document",
+            Limit::InputBytes | Limit::OutputBytes => "the document",
             Limit::Tasks => "the task count",
             Limit::Depth => "the nesting depth",
             Limit::Children => "the child count",
@@ -117,6 +134,7 @@ impl Limit {
     pub const fn unit(self) -> &'static str {
         match self {
             Limit::InputBytes
+            | Limit::OutputBytes
             | Limit::Title
             | Limit::Notes
             | Limit::Id
@@ -133,6 +151,7 @@ impl Limit {
     pub const fn code(self) -> &'static str {
         match self {
             Limit::InputBytes => "input-too-large",
+            Limit::OutputBytes => "output-too-large",
             Limit::Tasks => "too-many-tasks",
             Limit::Depth => "nesting-too-deep",
             Limit::Children => "too-many-children",
@@ -181,6 +200,7 @@ mod tests {
     #[test]
     fn limits_report_their_constant() {
         assert_eq!(Limit::InputBytes.max(), MAX_INPUT_BYTES);
+        assert_eq!(Limit::OutputBytes.max(), MAX_OUTPUT_BYTES);
         assert_eq!(Limit::Tasks.max(), MAX_TASKS);
         assert_eq!(Limit::Depth.max(), MAX_DEPTH);
         assert_eq!(Limit::Children.max(), MAX_CHILDREN);
@@ -196,6 +216,7 @@ mod tests {
     #[test]
     fn limits_report_stable_codes() {
         assert_eq!(Limit::InputBytes.code(), "input-too-large");
+        assert_eq!(Limit::OutputBytes.code(), "output-too-large");
         assert_eq!(Limit::Tasks.code(), "too-many-tasks");
         assert_eq!(Limit::Depth.code(), "nesting-too-deep");
         assert_eq!(Limit::Children.code(), "too-many-children");

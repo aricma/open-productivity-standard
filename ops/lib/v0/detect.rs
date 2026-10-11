@@ -38,21 +38,22 @@ fn value_version(value: &serde_json::Value) -> Option<String> {
 
 fn json_version(input: &str) -> Result<Option<String>, Error> {
     let value: serde_json::Value =
-        serde_json::from_str(input).map_err(|e| Error::syntax("JSON", e.to_string()))?;
+        serde_json::from_str(input).map_err(|e| Error::syntax(Format::Json, e.to_string()))?;
     Ok(value_version(&value))
 }
 
 fn yaml_version(input: &str) -> Result<Option<String>, Error> {
     let value: serde_yaml::Value =
-        serde_yaml::from_str(input).map_err(|e| Error::syntax("YAML", e.to_string()))?;
-    let json = serde_json::to_value(value).map_err(|e| Error::syntax("YAML", e.to_string()))?;
+        serde_yaml::from_str(input).map_err(|e| Error::syntax(Format::Yaml, e.to_string()))?;
+    let json =
+        serde_json::to_value(value).map_err(|e| Error::syntax(Format::Yaml, e.to_string()))?;
     Ok(value_version(&json))
 }
 
 fn jsonl_version(input: &str) -> Result<Option<String>, Error> {
     for line in input.lines().filter(|l| !l.trim().is_empty()) {
         let value: serde_json::Value =
-            serde_json::from_str(line).map_err(|e| Error::syntax("JSON", e.to_string()))?;
+            serde_json::from_str(line).map_err(|e| Error::syntax(Format::Json, e.to_string()))?;
         if let Some(version) = value_version(&value) {
             return Ok(Some(version));
         }

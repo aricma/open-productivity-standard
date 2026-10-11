@@ -21,17 +21,17 @@ tests/
 |---|---|---|
 | `claim.txt` | yes | one sentence describing the contract |
 | `given.<ext>` | yes | the input document; the extension names its format |
-| `expectation.<ext>` | `roundtrip/`, `transform/` | the document the input must export to |
+| `expectation.<ext>` | `roundtrip/`, and a `transform/` that can succeed | the document the input must export to |
+
+One rule follows from the third row: a **conversion without an expectation
+asserts that it cannot be done**. That is how a format's *writer* obligation
+is stated — a valid model that this format simply cannot carry — since such a
+model cannot be written down in the format that refuses it.
 
 ## Running a case
 
 - **`valid/`** — importing `given` must succeed.
-- **`invalid/`** — the enclosing format must reject `given`, one way or the
-  other. When `given` is in that same format, its **reader** must fail.
-  When `given` is in another format it is a valid model that can only be
-  rejected on the way out: the enclosing format's **writer** must fail.
-  Markdown cannot carry a level-1 heading inside `notes`, so
-  `markdown/invalid/notes-with-an-h1/` reads JSON and fails on write. The
+- **`invalid/`** — importing `given` in the enclosing format must fail. The
   model does not prescribe a reason, so the broken rule is stated in
   `claim.txt` and never matched.
 - **`roundtrip/`** — import `given` with the format's reader, export with
@@ -40,9 +40,12 @@ tests/
   losslessness the format promises: read your own bytes and get the same
   model back.
 - **`transform/`** — import `given` with the reader for its format, export
-  with the writer for the expectation's format, import the result again,
+  with the writer for the target its name names, import the result again,
   and require the resulting model to equal the model of
-  `expectation.<ext>`.
+  `expectation.<ext>`. Without an expectation, the import must succeed and
+  the export must fail: `json-to-jsonl-subtask-without-an-id/` is a valid
+  JSON tree whose subtasks have no ids, and a JSONL can only carry a child
+  as a reference.
 
 Comparison is semantic. The standard fixes field names and mappings, not
 key order, indentation, or trailing newline, so byte layout is not part of
@@ -61,13 +64,23 @@ which one it tests:
 - A **format** rule has cases only in that format's folder — a CSV metadata
   column, Markdown frontmatter, or a constraint only that syntax imposes.
   A format that can carry every valid model therefore has none.
+- A **writer** obligation is a conversion that cannot be done, and lives in
+  `transform/` without an expectation: the model is valid, and only the
+  format that refuses it is named.
+
+Matters of **implementation policy** do not belong here at all: the size
+before a document is refused, or which spec versions a tool implements. The
+standard does not decide those, so they are tested by the implementation
+that chose them.
 
 ## Adding a case
 
-- One case per directory; the directory name is a short statement.
-- `valid/`, `roundtrip/`, and `transform/` hold documents that follow the
-  rules; `invalid/` holds either a document that breaks one model rule or a
-  valid model the enclosing format cannot write.
+- One case per directory; the directory name is a short statement, and a
+  conversion's names its two formats: `<from>-to-<to>`, then the statement.
+- `valid/`, `roundtrip/`, and a `transform/` with an expectation hold
+  documents that follow the rules; `invalid/` holds a document that breaks
+  one model rule in its own format; a `transform/` without an expectation
+  holds a valid model the target format cannot carry.
 - Keep fixtures small; `claim.txt` states the contract.
 
 ## Why a portable corpus

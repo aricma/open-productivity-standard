@@ -122,6 +122,26 @@ fn object_notes() {
 
 #[rustfmt::skip]
 #[test]
+fn one_root_and_a_cycle() {
+    let given = include_str!("../../../../../specs/v0/tests/jsonl/invalid/one-root-and-a-cycle/given.jsonl");
+    assert!(
+        ops_lib::v0::read(ops_lib::v0::Format::Jsonl, given).is_err(),
+        "specs/v0/tests/jsonl/invalid/one-root-and-a-cycle: must be rejected — a cycle that sits beside a root must be rejected, not dropped."
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn one_root_and_a_self_reference() {
+    let given = include_str!("../../../../../specs/v0/tests/jsonl/invalid/one-root-and-a-self-reference/given.jsonl");
+    assert!(
+        ops_lib::v0::read(ops_lib::v0::Format::Jsonl, given).is_err(),
+        "specs/v0/tests/jsonl/invalid/one-root-and-a-self-reference: must be rejected — a task that is its own subtask must be rejected, not dropped."
+    );
+}
+
+#[rustfmt::skip]
+#[test]
 fn one_root_with_one_level_of_tasks_with_duplicate_ids() {
     let given = include_str!("../../../../../specs/v0/tests/jsonl/invalid/one-root-with-one-level-of-tasks-with-duplicate-ids/given.jsonl");
     assert!(
@@ -247,16 +267,6 @@ fn two_roots_with_one_level_of_tasks_with_shared_child() {
     assert!(
         ops_lib::v0::read(ops_lib::v0::Format::Jsonl, given).is_err(),
         "specs/v0/tests/jsonl/invalid/two-roots-with-one-level-of-tasks-with-shared-child: must be rejected — two roots with one level of tasks with shared child must be rejected."
-    );
-}
-
-#[rustfmt::skip]
-#[test]
-fn unknown_version() {
-    let given = include_str!("../../../../../specs/v0/tests/jsonl/invalid/unknown-version/given.jsonl");
-    assert!(
-        ops_lib::v0::read(ops_lib::v0::Format::Jsonl, given).is_err(),
-        "specs/v0/tests/jsonl/invalid/unknown-version: must be rejected — unknown version must be rejected."
     );
 }
 

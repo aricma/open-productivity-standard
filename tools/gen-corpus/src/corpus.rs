@@ -52,7 +52,7 @@ pub(crate) fn read_cases(root: &Path, version: &str) -> Vec<Case> {
         tests.display()
     );
     for case in &cases {
-        check_case_uses_its_format(version, case);
+        check_case_formats(version, case, &formats);
     }
     cases
 }
@@ -60,29 +60,65 @@ pub(crate) fn read_cases(root: &Path, version: &str) -> Vec<Case> {
 /// One case directory, read.
 fn read_case(root: &Path, dir: &Path, version: &str, format: Option<&str>, group: Group) -> Case {
     let files = case_files(dir);
+    let name = directory_name(dir);
     let claim = fs::read_to_string(&files.claim)
         .unwrap_or_else(|e| panic!("read {}: {e}", files.claim.display()))
         .trim()
         .to_string();
+    let expectation = files
+        .expectation
+        .map(|path| (file_extension(&path), path_from_root(root, &path)));
+
+    // What the case writes: the expectation's format where there is one, and
+    // otherwise the target a conversion's name names, since a conversion that
+    // cannot be done has no document to point at.
+    let target_ext = match (&expectation, group) {
+        (Some((ext, _)), Group::Roundtrip | Group::Transform) => Some(ext.clone()),
+        (None, Group::Transform) => Some(transform_direction(&name).1),
+        _ => None,
+    };
+
     let case = Case {
         version: version.to_string(),
         format: format.map(str::to_string),
         group,
-        name: directory_name(dir),
+        name,
         claim,
         given_ext: file_extension(&files.given),
         given: path_from_root(root, &files.given),
-        expectation: files
-            .expectation
-            .map(|path| (file_extension(&path), path_from_root(root, &path))),
+        target_ext,
+        expectation,
     };
-    assert!(
-        !group.requires_expectation() || case.expectation.is_some(),
-        "{}: needs an {}<ext>",
-        case.corpus_path(),
-        constants::EXPECTATION_PREFIX
-    );
+
+    // Which kinds carry an expectation: a round-trip always, a conversion only
+    // when it can be done, nothing else ever.
+    match (group, &case.expectation) {
+        (Group::Roundtrip, None) => {
+            panic!(
+                "{}: needs an {}<ext>",
+                case.corpus_path(),
+                constants::EXPECTATION_PREFIX
+            )
+        }
+        (Group::Valid | Group::Invalid, Some(_)) => panic!(
+            "{}: only a roundtrip or a transform carries an {}<ext>",
+            case.corpus_path(),
+            constants::EXPECTATION_PREFIX
+        ),
+        _ => {}
+    }
     case
+}
+
+/// A conversion's directory name, split into the formats it converts between:
+/// `<from>-to-<to>`, with anything after the target describing the case.
+fn transform_direction(case_dir_name: &str) -> (String, String) {
+    let parts: Vec<&str> = case_dir_name.split('-').collect();
+    assert!(
+        parts.len() >= 3 && parts[1] == "to",
+        "{case_dir_name}: a conversion is named `<from>-to-<to>`"
+    );
+    (parts[0].to_string(), parts[2].to_string())
 }
 
 /// A case directory's files.
@@ -182,23 +218,47 @@ fn check_only_known_kinds(root: &Path, format_dir: &Path, kinds: &[&str]) {
     }
 }
 
-/// Fails unless `valid/` and `roundtrip/` cases use the extension of the format
-/// they are filed under. `invalid/` may also hold a `given` in another format —
-/// a valid model the enclosing writer refuses — so it is not constrained here.
-fn check_case_uses_its_format(version: &str, case: &Case) {
-    let (Some(format), Group::Valid | Group::Roundtrip) = (&case.format, case.group) else {
+/// Fails unless a case's files are the formats the case says it is about: the
+/// format it is filed under, or — for a conversion, which is filed at the top —
+/// the two its name names.
+fn check_case_formats(version: &str, case: &Case, formats: &BTreeSet<String>) {
+    let Some(format) = &case.format else {
+        let (from, to) = transform_direction(&case.name);
+        let given_file = format!("{}{}", constants::GIVEN_PREFIX, case.given_ext);
+        for named in [&from, &to] {
+            assert!(
+                formats.contains(named),
+                "{}: `{named}` is not a documented format",
+                case.corpus_path()
+            );
+        }
+        assert!(
+            formats::same(version, &from, &case.given_ext),
+            "{}: `{given_file}` is not {from}",
+            case.corpus_path()
+        );
+        if let Some((ext, _)) = &case.expectation {
+            let expectation_file = format!("{}{ext}", constants::EXPECTATION_PREFIX);
+            assert!(
+                formats::same(version, &to, ext),
+                "{}: `{expectation_file}` is not {to}",
+                case.corpus_path()
+            );
+        }
         return;
     };
-    let reads = case.given_ext.as_str();
+
+    let given_file = format!("{}{}", constants::GIVEN_PREFIX, case.given_ext);
     assert!(
-        formats::same(version, format, reads),
-        "{}: `given.{reads}` is not {format}",
+        formats::same(version, format, &case.given_ext),
+        "{}: `{given_file}` is not {format}",
         case.corpus_path()
     );
     if let Some((ext, _)) = &case.expectation {
+        let expectation_file = format!("{}{ext}", constants::EXPECTATION_PREFIX);
         assert!(
             formats::same(version, format, ext),
-            "{}: `expectation.{ext}` is not {format}",
+            "{}: `{expectation_file}` is not {format}",
             case.corpus_path()
         );
     }
@@ -262,6 +322,13 @@ mod tests {
         root
     }
 
+    /// The formats the conversion tests below convert between.
+    const CONVERSION: &[(&str, &str)] = &[
+        ("specs/v0/formats/json.md", "# JSON\n"),
+        ("specs/v0/formats/jsonl.md", "# JSONL\n"),
+        ("specs/v0/formats/yaml.md", "# YAML\n"),
+    ];
+
     /// A case filed under a name that is not a documented format used to be
     /// walked past in silence, which is how four cases went missing once.
     #[test]
@@ -271,7 +338,6 @@ mod tests {
             "undocumented",
             &[
                 ("specs/v0/formats/json.md", "# JSON\n"),
-                ("specs/v0/formats/README.md", "# Formats\n"),
                 ("specs/v0/tests/json/valid/ok/claim.txt", "accepted."),
                 ("specs/v0/tests/json/valid/ok/given.json", "{}"),
                 ("specs/v0/tests/invalid/json/ok/claim.txt", "filed wrongly."),
@@ -298,20 +364,63 @@ mod tests {
         read_cases(&root, "v0");
     }
 
-    /// A `valid/` case whose document is a different format than the directory
-    /// is a mistake the generator can see, so it says so.
+    /// An `invalid` case is a document its own format's reader rejects, so a
+    /// document in another format is a mistake.
     #[test]
     #[should_panic(expected = "is not json")]
-    fn a_valid_case_must_use_its_format() {
+    fn an_invalid_case_must_use_its_format() {
         let root = scratch(
             "mismatch",
             &[
                 ("specs/v0/formats/json.md", "# JSON\n"),
                 ("specs/v0/formats/yaml.md", "# YAML\n"),
-                ("specs/v0/tests/json/valid/ok/claim.txt", "accepted."),
-                ("specs/v0/tests/json/valid/ok/given.yaml", "title: t\n"),
+                ("specs/v0/tests/json/invalid/ok/claim.txt", "rejected."),
+                ("specs/v0/tests/json/invalid/ok/given.yaml", "title: t\n"),
             ],
         );
+        read_cases(&root, "v0");
+    }
+
+    /// A conversion's name says which formats it converts between, and that has
+    /// to agree with the document it reads.
+    #[test]
+    #[should_panic(expected = "is not yaml")]
+    fn a_conversion_name_must_agree_with_its_given() {
+        let mut files = CONVERSION.to_vec();
+        files.push((
+            "specs/v0/tests/transform/yaml-to-jsonl/claim.txt",
+            "converts.",
+        ));
+        files.push(("specs/v0/tests/transform/yaml-to-jsonl/given.json", "{}"));
+        let root = scratch("direction", &files);
+        read_cases(&root, "v0");
+    }
+
+    /// A conversion with nothing to compare against is a conversion that must
+    /// fail, and it still has to name a target.
+    #[test]
+    fn a_conversion_without_an_expectation_names_its_target() {
+        let mut files = CONVERSION.to_vec();
+        files.push((
+            "specs/v0/tests/transform/json-to-jsonl/claim.txt",
+            "cannot.",
+        ));
+        files.push(("specs/v0/tests/transform/json-to-jsonl/given.json", "{}"));
+        let root = scratch("target", &files);
+        let cases = read_cases(&root, "v0");
+        assert_eq!(cases.len(), 1);
+        assert_eq!(cases[0].target_ext.as_deref(), Some("jsonl"));
+        assert!(cases[0].must_fail());
+    }
+
+    /// A malformed conversion name is a mistake, not a case nobody can run.
+    #[test]
+    #[should_panic(expected = "a conversion is named")]
+    fn a_malformed_conversion_name_is_not_ignored() {
+        let mut files = CONVERSION.to_vec();
+        files.push(("specs/v0/tests/transform/json-tojsonl/claim.txt", "cannot."));
+        files.push(("specs/v0/tests/transform/json-tojsonl/given.json", "{}"));
+        let root = scratch("malformed", &files);
         read_cases(&root, "v0");
     }
 }

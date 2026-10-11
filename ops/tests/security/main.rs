@@ -3,7 +3,7 @@
 //! raising one moves the test with it.
 
 use ops_lib::v0::limits::*;
-use ops_lib::v0::{self, Format, Status, Task};
+use ops_lib::v0::{self, Format, Metadata, MetadataValue, Status, Task};
 
 /// The document must be rejected with this code.
 fn rejected(input: &str, format: Format, code: &str) {
@@ -288,4 +288,132 @@ fn malformed_json_is_rejected() {
     for input in bad {
         assert!(v0::read(Format::Json, &input).is_err(), "{input:?}");
     }
+}
+
+/// A nested chain `levels` deep, as text.
+fn json_chain(levels: usize) -> String {
+    let mut doc = String::new();
+    for _ in 0..levels - 1 {
+        doc.push_str(r#"{"title":"t","status":"open","subtasks":["#);
+    }
+    doc.push_str(r#"{"title":"t","status":"open"}"#);
+    for _ in 0..levels - 1 {
+        doc.push_str("]}");
+    }
+    doc
+}
+
+/// The same chains as a forest: with two or more roots the document gains an
+/// array wrapper, which costs one level of the parser's budget.
+fn json_forest(roots: usize, levels: usize) -> String {
+    if roots == 1 {
+        json_chain(levels)
+    } else {
+        format!("[{},{}]", json_chain(levels), json_chain(levels))
+    }
+}
+
+/// A tree document is only as deep as a reader can parse it back, so the bound
+/// holds from both sides: at it the document round-trips, whatever its shape,
+/// and past it a writer refuses by the bound while a reader refuses because the
+/// parser's budget is reached first.
+#[test]
+fn the_depth_bound_is_what_a_tree_document_can_carry() {
+    for format in [Format::Json, Format::Yaml] {
+        for roots in [1, 2] {
+            let at = json_forest(roots, MAX_DEPTH + 1);
+            let tasks = v0::read(format, &at).unwrap_or_else(|e| {
+                panic!("{} with {roots} root(s): at MAX_DEPTH: {e}", format.name())
+            });
+            let out = v0::write(format, &tasks).unwrap_or_else(|e| {
+                panic!(
+                    "{} with {roots} root(s): writing it back: {e}",
+                    format.name()
+                )
+            });
+            assert_eq!(
+                v0::read(format, &out).unwrap(),
+                tasks,
+                "{} with {roots} root(s): a document at MAX_DEPTH did not round-trip",
+                format.name()
+            );
+        }
+
+        // One level deeper: a reader refuses whatever the reason, and a writer
+        // refuses because of the bound.
+        assert!(
+            v0::read(format, &json_forest(2, MAX_DEPTH + 2)).is_err(),
+            "{}: past MAX_DEPTH was accepted",
+            format.name()
+        );
+        let mut deeper = Task::new("root".into(), Status::Open);
+        deeper.subtasks = v0::read(format, &json_chain(MAX_DEPTH + 1)).unwrap();
+        assert_eq!(
+            v0::write(format, &[deeper]).unwrap_err().code(),
+            "nesting-too-deep",
+            "{}",
+            format.name()
+        );
+    }
+}
+
+/// The limits count bytes, not characters, so a multi-byte field is measured
+/// by its UTF-8 length.
+#[test]
+fn field_limits_count_bytes_not_characters() {
+    let at = MAX_TITLE_BYTES / '😀'.len_utf8();
+    let ok = format!(r#"{{"title":"{}","status":"open"}}"#, "😀".repeat(at));
+    assert!(
+        v0::read(Format::Json, &ok).is_ok(),
+        "{} bytes",
+        "😀".repeat(at).len()
+    );
+    let over = format!(r#"{{"title":"{}","status":"open"}}"#, "😀".repeat(at + 1));
+    rejected(&over, Format::Json, "field-too-long");
+}
+
+/// A metadata value's bound is its *serialized* size, so escaping counts: each
+/// quote inside the value costs two bytes on the wire, plus the two around it.
+#[test]
+fn metadata_value_limit_counts_escaped_bytes() {
+    let at = (MAX_METADATA_VALUE_BYTES - 2) / 2;
+    let doc = metadata_doc(&format!(
+        r#""blob":{}"#,
+        serde_json::to_string(&"\"".repeat(at)).expect("string")
+    ));
+    assert!(v0::read(Format::Json, &doc).is_ok(), "{} bytes", doc.len());
+    let doc = metadata_doc(&format!(
+        r#""blob":{}"#,
+        serde_json::to_string(&"\"".repeat(at + 1)).expect("string")
+    ));
+    rejected(&doc, Format::Json, "metadata-value-too-large");
+}
+
+/// A CSV document is `rows × columns` cells, and a key only one task carries
+/// still needs a cell in every row. So a model the per-task limits allow can
+/// ask for a document far past what this library would read back — the writer
+/// refuses rather than building it.
+#[test]
+fn a_runaway_csv_write_is_refused() {
+    let mut tasks = Vec::new();
+    for i in 0..2_000 {
+        let mut metadata = Metadata::new();
+        for k in 0..8 {
+            metadata.insert(format!("t{i:05}_k{k}"), MetadataValue::String("v".into()));
+        }
+        tasks.push(Task {
+            title: format!("t{i}"),
+            status: Status::Open,
+            id: Some(format!("t{i}")),
+            metadata: Some(metadata),
+            ..Default::default()
+        });
+    }
+    // The same model is fine in a format that does not spread keys over
+    // columns, so it is the mapping, not the model, that is too big.
+    assert!(v0::write(Format::Json, &tasks).is_ok());
+    assert_eq!(
+        v0::write(Format::Csv, &tasks).unwrap_err().code(),
+        "output-too-large"
+    );
 }

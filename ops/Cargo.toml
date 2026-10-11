@@ -9,8 +9,8 @@ repository = "https://github.com/aricma/open-productivity-spec"
 [lib]
 path = "lib/lib.rs"
 
-[lints.rust]
-unsafe_code = "deny"
+[lints]
+workspace = true
 
 [dependencies]
 regex = "1"

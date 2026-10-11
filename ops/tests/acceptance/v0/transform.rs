@@ -2,6 +2,94 @@
 
 #[rustfmt::skip]
 #[test]
+fn csv_to_json() {
+    let given = include_str!("../../../../specs/v0/tests/transform/csv-to-json/given.csv");
+    let expected = include_str!("../../../../specs/v0/tests/transform/csv-to-json/expectation.json");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/csv-to-json: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Json, &tasks)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/csv-to-json: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Json, &out)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/csv-to-json: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Json, expected)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/csv-to-json: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "specs/v0/tests/transform/csv-to-json: a flat CSV document converts to nested JSON, resolving child ids into tasks. (the exported model differs from the expectation)"
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn csv_to_jsonl() {
+    let given = include_str!("../../../../specs/v0/tests/transform/csv-to-jsonl/given.csv");
+    let expected = include_str!("../../../../specs/v0/tests/transform/csv-to-jsonl/expectation.jsonl");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Csv, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/csv-to-jsonl: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Jsonl, &tasks)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/csv-to-jsonl: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Jsonl, &out)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/csv-to-jsonl: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Jsonl, expected)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/csv-to-jsonl: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "specs/v0/tests/transform/csv-to-jsonl: a CSV document converts to JSONL, one record per task. (the exported model differs from the expectation)"
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn json_to_csv() {
+    let given = include_str!("../../../../specs/v0/tests/transform/json-to-csv/given.json");
+    let expected = include_str!("../../../../specs/v0/tests/transform/json-to-csv/expectation.csv");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Json, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/json-to-csv: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Csv, &tasks)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/json-to-csv: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Csv, &out)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/json-to-csv: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Csv, expected)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/json-to-csv: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "specs/v0/tests/transform/json-to-csv: a nested JSON document converts to CSV, and the hierarchy survives as child ids. (the exported model differs from the expectation)"
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn json_to_csv_metadata_column() {
+    let given = include_str!("../../../../specs/v0/tests/transform/json-to-csv-metadata-column/given.json");
+    let expected = include_str!("../../../../specs/v0/tests/transform/json-to-csv-metadata-column/expectation.csv");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Json, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/json-to-csv-metadata-column: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Csv, &tasks)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/json-to-csv-metadata-column: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Csv, &out)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/json-to-csv-metadata-column: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Csv, expected)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/json-to-csv-metadata-column: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "specs/v0/tests/transform/json-to-csv-metadata-column: a string that parses as JSON goes in the CSV metadata column, so it reads back as the string it was. (the exported model differs from the expectation)"
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn json_to_csv_subtask_without_an_id() {
+    let given = include_str!("../../../../specs/v0/tests/transform/json-to-csv-subtask-without-an-id/given.json");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Json, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/json-to-csv-subtask-without-an-id: given rejected: {e}"));
+    assert!(
+        ops_lib::v0::write(ops_lib::v0::Format::Csv, &tasks).is_err(),
+        "specs/v0/tests/transform/json-to-csv-subtask-without-an-id: must be rejected — converting this JSON to CSV must fail: a CSV carries children as ids, and these subtasks have none."
+    );
+}
+
+#[rustfmt::skip]
+#[test]
 fn json_to_json_duplicate_key() {
     let given = include_str!("../../../../specs/v0/tests/transform/json-to-json-duplicate-key/given.json");
     let expected = include_str!("../../../../specs/v0/tests/transform/json-to-json-duplicate-key/expectation.json");
@@ -78,6 +166,18 @@ fn json_to_jsonl() {
 
 #[rustfmt::skip]
 #[test]
+fn json_to_jsonl_subtask_without_an_id() {
+    let given = include_str!("../../../../specs/v0/tests/transform/json-to-jsonl-subtask-without-an-id/given.json");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Json, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/json-to-jsonl-subtask-without-an-id: given rejected: {e}"));
+    assert!(
+        ops_lib::v0::write(ops_lib::v0::Format::Jsonl, &tasks).is_err(),
+        "specs/v0/tests/transform/json-to-jsonl-subtask-without-an-id: must be rejected — converting this JSON to JSONL must fail: a JSONL carries children as ids, and these subtasks have none."
+    );
+}
+
+#[rustfmt::skip]
+#[test]
 fn json_to_yaml() {
     let given = include_str!("../../../../specs/v0/tests/transform/json-to-yaml/given.json");
     let expected = include_str!("../../../../specs/v0/tests/transform/json-to-yaml/expectation.yaml");
@@ -92,6 +192,25 @@ fn json_to_yaml() {
     assert_eq!(
         produced, wanted,
         "specs/v0/tests/transform/json-to-yaml: A nested JSON document must convert to YAML without loss. (the exported model differs from the expectation)"
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn jsonl_to_csv() {
+    let given = include_str!("../../../../specs/v0/tests/transform/jsonl-to-csv/given.jsonl");
+    let expected = include_str!("../../../../specs/v0/tests/transform/jsonl-to-csv/expectation.csv");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Jsonl, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/jsonl-to-csv: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Csv, &tasks)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/jsonl-to-csv: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Csv, &out)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/jsonl-to-csv: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Csv, expected)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/jsonl-to-csv: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "specs/v0/tests/transform/jsonl-to-csv: a flat JSONL document converts to CSV. (the exported model differs from the expectation)"
     );
 }
 
@@ -130,6 +249,25 @@ fn jsonl_to_yaml() {
     assert_eq!(
         produced, wanted,
         "specs/v0/tests/transform/jsonl-to-yaml: A flat JSONL document must convert to nested YAML without loss. (the exported model differs from the expectation)"
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn yaml_to_csv() {
+    let given = include_str!("../../../../specs/v0/tests/transform/yaml-to-csv/given.yaml");
+    let expected = include_str!("../../../../specs/v0/tests/transform/yaml-to-csv/expectation.csv");
+    let tasks = ops_lib::v0::read(ops_lib::v0::Format::Yaml, given)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/yaml-to-csv: given rejected: {e}"));
+    let out = ops_lib::v0::write(ops_lib::v0::Format::Csv, &tasks)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/yaml-to-csv: write failed: {e}"));
+    let produced = ops_lib::v0::read(ops_lib::v0::Format::Csv, &out)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/yaml-to-csv: output rejected: {e}"));
+    let wanted = ops_lib::v0::read(ops_lib::v0::Format::Csv, expected)
+        .unwrap_or_else(|e| panic!("specs/v0/tests/transform/yaml-to-csv: expectation rejected: {e}"));
+    assert_eq!(
+        produced, wanted,
+        "specs/v0/tests/transform/yaml-to-csv: a nested YAML document converts to CSV. (the exported model differs from the expectation)"
     );
 }
 
@@ -194,6 +332,11 @@ fn yaml_to_jsonl() {
 #[test]
 #[ignore = "unsupported format: md"]
 fn json_to_markdown_line_break() {}
+
+#[rustfmt::skip]
+#[test]
+#[ignore = "unsupported format: markdown"]
+fn json_to_markdown_notes_with_an_h1() {}
 
 #[rustfmt::skip]
 #[test]

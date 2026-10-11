@@ -19,6 +19,23 @@ impl Format {
         }
     }
 
+    /// Whether this format carries the tree as nested task objects rather
+    /// than as child-id references. The other family is the flat one, whose
+    /// documents reference tasks by id.
+    pub const fn nests(self) -> bool {
+        matches!(self, Format::Json | Format::Yaml)
+    }
+
+    /// The name this format goes by in diagnostics.
+    pub const fn display_name(self) -> &'static str {
+        match self {
+            Format::Json => "JSON",
+            Format::Yaml => "YAML",
+            Format::Jsonl => "JSONL",
+            Format::Csv => "CSV",
+        }
+    }
+
     pub fn from_name(name: &str) -> Option<Format> {
         Some(match name {
             "json" => Format::Json,
@@ -49,5 +66,16 @@ mod tests {
     fn markdown_is_not_a_format_this_crate_claims() {
         assert_eq!(Format::from_name("markdown"), None);
         assert_eq!(Format::from_name("md"), None);
+    }
+
+    #[test]
+    fn the_families_are_nested_and_flat() {
+        assert!(Format::Json.nests());
+        assert!(Format::Yaml.nests());
+        assert!(!Format::Jsonl.nests());
+        assert!(!Format::Csv.nests());
+        for format in [Format::Json, Format::Yaml, Format::Jsonl, Format::Csv] {
+            assert!(!format.display_name().is_empty());
+        }
     }
 }

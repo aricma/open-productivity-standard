@@ -17,11 +17,6 @@ fn metadata_value_with_a_raw_line_break() {}
 
 #[rustfmt::skip]
 #[test]
-#[ignore = "unsupported format: markdown"]
-fn notes_with_an_h1() {}
-
-#[rustfmt::skip]
-#[test]
 #[ignore = "unsupported format: md"]
 fn one_root_with_one_level_of_tasks_with_empty_title() {}
 
@@ -39,8 +34,3 @@ fn one_root_with_zero_levels_of_tasks_with_invalid_status() {}
 #[test]
 #[ignore = "unsupported format: md"]
 fn unknown_frontmatter_key() {}
-
-#[rustfmt::skip]
-#[test]
-#[ignore = "unsupported format: md"]
-fn unknown_version() {}

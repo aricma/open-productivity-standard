@@ -1,3 +1,4 @@
+use crate::v0::format::Format;
 use crate::v0::limits::Limit;
 use std::fmt;
 
@@ -6,14 +7,14 @@ pub enum Error {
     Validation(ValidationError),
     /// One format's syntax, or a value shaped unlike a task.
     Syntax {
-        format: &'static str,
+        format: Format,
         message: String,
     },
 }
 
 impl Error {
     /// A syntax or shape rejection from one format.
-    pub(crate) fn syntax(format: &'static str, message: impl ToString) -> Error {
+    pub(crate) fn syntax(format: Format, message: impl ToString) -> Error {
         Error::Syntax {
             format,
             message: message.to_string(),
@@ -25,7 +26,9 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::Validation(e) => write!(f, "invalid OPS document: {e}"),
-            Error::Syntax { format, message } => write!(f, "invalid {format}: {message}"),
+            Error::Syntax { format, message } => {
+                write!(f, "invalid {}: {message}", format.display_name())
+            }
         }
     }
 }
@@ -39,7 +42,7 @@ pub enum ValidationError {
     SharedChild(String),
     CyclicReference,
     VersionOnSubtask(String),
-    UnknownOPSVersion(String),
+    UnsupportedVersion(String),
     MixedVersions {
         first: String,
         second: String,
@@ -60,6 +63,10 @@ pub enum ValidationError {
         task: String,
         subtask: String,
     },
+    SubtaskWithoutId {
+        task: String,
+        subtask: String,
+    },
     LimitExceeded {
         limit: Limit,
         got: usize,
@@ -75,15 +82,18 @@ impl fmt::Display for ValidationError {
                 write!(f, "task id `{id}` has more than one parent")
             }
             ValidationError::CyclicReference => {
-                write!(f, "references form a cycle; the document has no root")
+                write!(
+                    f,
+                    "references form a cycle; a task cannot descend from itself"
+                )
             }
             ValidationError::VersionOnSubtask(title) => {
                 write!(f, "task `{title}` carries a version below a root")
             }
-            ValidationError::UnknownOPSVersion(v) => write!(
+            ValidationError::UnsupportedVersion(v) => write!(
                 f,
-                "version `{v}` is not a released OPS version (known: {})",
-                crate::shared::version::RELEASED_VERSIONS.join(", ")
+                "this library does not implement version `{v}` (it implements: {})",
+                crate::shared::version::SUPPORTED_VERSIONS.join(", ")
             ),
             ValidationError::MixedVersions { first, second } => {
                 write!(f, "document declares both version `{first}` and `{second}`")
@@ -112,6 +122,10 @@ impl fmt::Display for ValidationError {
             ValidationError::OpenSubtask { task, subtask } => {
                 write!(f, "task `{task}` is done but subtask `{subtask}` is open")
             }
+            ValidationError::SubtaskWithoutId { task, subtask } => write!(
+                f,
+                "subtask `{subtask}` of task `{task}` has no id, which a flat format needs"
+            ),
             ValidationError::LimitExceeded { limit, got } => write!(
                 f,
                 "{} is {got} {}; the limit is {}",
@@ -136,7 +150,7 @@ impl ValidationError {
             Self::SharedChild(_) => "shared-child",
             Self::CyclicReference => "cyclic-reference",
             Self::VersionOnSubtask(_) => "version-on-subtask",
-            Self::UnknownOPSVersion(_) => "unknown-version",
+            Self::UnsupportedVersion(_) => "unsupported-version",
             Self::MixedVersions { .. } => "mixed-versions",
             Self::InvalidMetadataKey(_) => "invalid-metadata-key",
             Self::MissingTitle => "missing-title",
@@ -148,6 +162,7 @@ impl ValidationError {
             Self::InvalidFieldType { .. } => "invalid-field-type",
             Self::DuplicateMetadataKey(_) => "duplicate-metadata-key",
             Self::OpenSubtask { .. } => "open-subtask",
+            Self::SubtaskWithoutId { .. } => "subtask-without-id",
             Self::LimitExceeded { limit, .. } => limit.code(),
         }
     }
@@ -224,8 +239,16 @@ mod tests {
             "version-on-subtask"
         );
         assert_eq!(
-            ValidationError::UnknownOPSVersion("9".into()).code(),
-            "unknown-version"
+            ValidationError::SubtaskWithoutId {
+                task: "p".into(),
+                subtask: "c".into(),
+            }
+            .code(),
+            "subtask-without-id"
+        );
+        assert_eq!(
+            ValidationError::UnsupportedVersion("9".into()).code(),
+            "unsupported-version"
         );
         assert_eq!(
             ValidationError::MixedVersions {
@@ -251,8 +274,11 @@ mod tests {
 
     #[test]
     fn syntax_errors_share_one_code() {
-        assert_eq!(Error::syntax("CSV", "x").code(), "invalid-syntax");
-        assert_eq!(Error::syntax("Markdown", "x").code(), "invalid-syntax");
+        assert_eq!(Error::syntax(Format::Csv, "x").code(), "invalid-syntax");
+        assert_eq!(
+            Error::syntax(Format::Json, "x").to_string(),
+            "invalid JSON: x"
+        );
     }
 
     #[test]
@@ -270,7 +296,7 @@ mod tests {
             Error::Validation(ValidationError::MissingTitle).code(),
             "missing-title"
         );
-        assert_eq!(Error::syntax("JSON", "bad").code(), "invalid-syntax");
-        assert_eq!(Error::syntax("YAML", "bad").code(), "invalid-syntax");
+        assert_eq!(Error::syntax(Format::Json, "bad").code(), "invalid-syntax");
+        assert_eq!(Error::syntax(Format::Yaml, "bad").code(), "invalid-syntax");
     }
 }

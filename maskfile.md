@@ -84,10 +84,11 @@ Write-Host "All tools present."
 ```sh
 set -eu
 export PATH="$MASKFILE_DIR/tmp/bin:$PATH"
+# Every member, so the tools are formatted with the library.
 if [ "${fix:-}" = "true" ]; then
-    cargo fmt
+    cargo fmt --all
 else
-    cargo fmt --check
+    cargo fmt --all --check
 fi
 ```
 
@@ -95,7 +96,7 @@ fi
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 $env:PATH = "$env:MASKFILE_DIR\tmp\bin;$env:PATH"
-if ($fix) { cargo fmt } else { cargo fmt --check }
+if ($fix) { cargo fmt --all } else { cargo fmt --all --check }
 ```
 
 ## build
@@ -111,12 +112,13 @@ if ($fix) { cargo fmt } else { cargo fmt --check }
 ```sh
 set -eu
 export PATH="$MASKFILE_DIR/tmp/bin:$PATH"
+# Every member: the library and the tools that generate its tests.
 if [ "${fix:-}" = "true" ]; then
-    cargo clippy --fix --allow-dirty --all-targets --all-features -- -D warnings
+    cargo clippy --workspace --fix --allow-dirty --all-targets --all-features -- -D warnings
 fi
-cargo check --all-targets --all-features
-cargo clippy --all-targets --all-features -- -D warnings
-RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features
+cargo check --workspace --all-targets --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features
 cargo audit
 cargo deny check
 # A reader for a small model has no business being megabytes. The crate is
@@ -137,11 +139,12 @@ fi
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 $env:PATH = "$env:MASKFILE_DIR\tmp\bin;$env:PATH"
-if ($fix) { cargo clippy --fix --allow-dirty --all-targets --all-features -- -D warnings }
-cargo check --all-targets --all-features
-cargo clippy --all-targets --all-features -- -D warnings
+# See the sh block: every member, the library and the tools.
+if ($fix) { cargo clippy --workspace --fix --allow-dirty --all-targets --all-features -- -D warnings }
+cargo check --workspace --all-targets --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 $env:RUSTDOCFLAGS = "-D warnings"
-cargo doc --no-deps --all-features
+cargo doc --workspace --no-deps --all-features
 cargo audit
 cargo deny check
 # See the sh block for why the budget is 2 MiB.

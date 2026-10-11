@@ -20,7 +20,7 @@ A Rust reader/writer for the
   callers that pin the old one.
 - **Validates** on both sides: parsing never returns an invalid forest,
   and in-memory models are checked before serializing (duplicate ids,
-  metadata key charset, version placement and released versions, and a
+  metadata key charset, version placement and supported versions, and a
   `done` task with an `open` subtask).
 - **Writes the same bytes twice**: output is idempotent — write, read,
   write again is byte-stable — so reformatting a file never churns it.

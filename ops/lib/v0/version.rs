@@ -1,6 +1,6 @@
-//! Version-0 application of the shared released-version rule, plus the
-//! version rules: a document declares one version, and every declaration
-//! must agree.
+//! Version-0 application of the library's supported-version policy, plus the
+//! version rules: a document declares at most one version, and every
+//! declaration must agree.
 
 use crate::shared::version;
 use crate::v0::error::{Error, ValidationError};
@@ -18,8 +18,8 @@ pub(crate) fn check_document_versions(tasks: &[Task]) -> Result<(), Error> {
             second: (*second).to_owned(),
         }));
     }
-    match version::first_unreleased(declared) {
-        Some(v) => Err(Error::Validation(ValidationError::UnknownOPSVersion(v))),
+    match version::first_unsupported(declared) {
+        Some(v) => Err(Error::Validation(ValidationError::UnsupportedVersion(v))),
         None => Ok(()),
     }
 }
@@ -52,8 +52,8 @@ mod tests {
     }
 
     #[test]
-    fn an_unreleased_version_is_rejected() {
+    fn an_unsupported_version_is_rejected() {
         let err = check_document_versions(&[root(Some("1"))]).unwrap_err();
-        assert_eq!(err.code(), "unknown-version");
+        assert_eq!(err.code(), "unsupported-version");
     }
 }

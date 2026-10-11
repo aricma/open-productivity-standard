@@ -98,8 +98,18 @@ fn render_body(case: &Case, prefix: &str, api: &str, reads: &str, writes: Option
         .unwrap_or_else(|e| panic!("{where_it_lives}: must be accepted — {claim}: {{e}}"));
 "#
         ),
-        Group::Invalid if case.rejects_the_writer() => {
-            let writes = writes.expect("a writer-reject case has a format to write");
+        Group::Invalid => format!(
+            r#"    let given = {given};
+    assert!(
+        {api}::read({reads}, given).is_err(),
+        "{where_it_lives}: must be rejected — {claim}"
+    );
+"#
+        ),
+        // A conversion that cannot be done: the model is valid, so the read
+        // has to succeed, and only the write is expected to fail.
+        Group::Transform if case.must_fail() => {
+            let writes = writes.expect("a conversion names the format it converts to");
             format!(
                 r#"    let given = {given};
     let tasks = {api}::read({reads}, given)
@@ -111,16 +121,8 @@ fn render_body(case: &Case, prefix: &str, api: &str, reads: &str, writes: Option
 "#
             )
         }
-        Group::Invalid => format!(
-            r#"    let given = {given};
-    assert!(
-        {api}::read({reads}, given).is_err(),
-        "{where_it_lives}: must be rejected — {claim}"
-    );
-"#
-        ),
         Group::Roundtrip | Group::Transform => {
-            let writes = writes.expect("a round-trip or transform writes a format");
+            let writes = writes.expect("a round-trip or conversion writes a format");
             let (_, expectation) = case
                 .expectation
                 .as_ref()
@@ -182,7 +184,13 @@ mod tests {
 
     use super::*;
 
-    fn case(group: Group, format: Option<&str>, given: &str, expectation: Option<&str>) -> Case {
+    fn case(
+        group: Group,
+        format: Option<&str>,
+        given: &str,
+        target: Option<&str>,
+        expectation: Option<&str>,
+    ) -> Case {
         Case {
             version: "v0".to_string(),
             format: format.map(str::to_string),
@@ -191,6 +199,7 @@ mod tests {
             claim: "the claim".to_string(),
             given_ext: given.to_string(),
             given: format!("specs/v0/tests/place/given.{given}"),
+            target_ext: target.map(str::to_string),
             expectation: expectation.map(|ext| {
                 (
                     ext.to_string(),
@@ -201,7 +210,8 @@ mod tests {
     }
 
     /// Rendered from the paths directly, so every shape is covered — including
-    /// the writer-reject one no claimed format reaches today.
+    /// the conversion that cannot be done, which no corpus case reaches while
+    /// the format it needs is unclaimed.
     fn body(case: &Case, writes: Option<&str>) -> String {
         let reads = formats::variant_path(&case.version, &case.given_ext)
             .expect("these test cases are in a claimed format");
@@ -210,39 +220,47 @@ mod tests {
 
     #[test]
     fn each_shape_generates_its_assertion() {
-        let valid = body(&case(Group::Valid, Some("json"), "json", None), None);
+        let valid = body(&case(Group::Valid, Some("json"), "json", None, None), None);
         assert!(
             valid.contains("::read(ops_lib::v0::Format::Json"),
             "{valid}"
         );
         assert!(valid.contains("must be accepted"), "{valid}");
 
-        // An `invalid` case whose given is in the enclosing format is a reader
-        // rejection.
-        let invalid = body(&case(Group::Invalid, Some("json"), "json", None), None);
+        // An `invalid` case is a document the enclosing format's reader rejects.
+        let invalid = body(
+            &case(Group::Invalid, Some("json"), "json", None, None),
+            None,
+        );
         assert!(invalid.contains(".is_err()"), "{invalid}");
         assert!(
             invalid.contains("::read(ops_lib::v0::Format::Json"),
             "{invalid}"
         );
 
-        // One whose given is in another format is a writer rejection.
-        let refused = body(
-            &case(Group::Invalid, Some("markdown"), "json", None),
-            Some("ops_lib::v0::Format::Markdown"),
+        // A conversion that cannot be done reads the model and refuses to write.
+        let impossible = body(
+            &case(Group::Transform, None, "json", Some("jsonl"), None),
+            Some("ops_lib::v0::Format::Jsonl"),
         );
         assert!(
-            refused.contains("::read(ops_lib::v0::Format::Json"),
-            "{refused}"
+            impossible.contains("::read(ops_lib::v0::Format::Json"),
+            "{impossible}"
         );
         assert!(
-            refused.contains("::write(ops_lib::v0::Format::Markdown"),
-            "{refused}"
+            impossible.contains("::write(ops_lib::v0::Format::Jsonl"),
+            "{impossible}"
         );
-        assert!(refused.contains(".is_err()"), "{refused}");
+        assert!(impossible.contains(".is_err()"), "{impossible}");
 
         let roundtrip = body(
-            &case(Group::Roundtrip, Some("json"), "json", Some("json")),
+            &case(
+                Group::Roundtrip,
+                Some("json"),
+                "json",
+                Some("json"),
+                Some("json"),
+            ),
             Some("ops_lib::v0::Format::Json"),
         );
         assert!(
@@ -251,7 +269,7 @@ mod tests {
         );
 
         let transform = body(
-            &case(Group::Transform, None, "json", Some("yaml")),
+            &case(Group::Transform, None, "json", Some("yaml"), Some("yaml")),
             Some("ops_lib::v0::Format::Yaml"),
         );
         assert!(
@@ -260,11 +278,17 @@ mod tests {
         );
     }
 
-    /// Both expectations are read back, and the comparison is the model.
+    /// Both documents are read back, and the comparison is the model.
     #[test]
     fn a_round_trip_compares_the_model() {
         let roundtrip = body(
-            &case(Group::Roundtrip, Some("json"), "json", Some("json")),
+            &case(
+                Group::Roundtrip,
+                Some("json"),
+                "json",
+                Some("json"),
+                Some("json"),
+            ),
             Some("ops_lib::v0::Format::Json"),
         );
         assert!(roundtrip.contains("expectation.json"), "{roundtrip}");
@@ -278,16 +302,16 @@ mod tests {
     fn an_unsupported_format_is_ignored() {
         let root = Path::new("/repo");
         let out = root.join(constants::ACCEPTANCE_DIR);
-        let markdown = case(Group::Valid, Some("markdown"), "md", None);
+        let markdown = case(Group::Valid, Some("markdown"), "md", None, None);
         assert_eq!(
             case_body(root, &out, "v0/markdown/valid.rs", &markdown)
                 .unwrap_err()
                 .0,
             "md"
         );
-        let refused = case(Group::Invalid, Some("markdown"), "json", None);
+        let impossible = case(Group::Transform, None, "json", Some("markdown"), None);
         assert_eq!(
-            case_body(root, &out, "v0/markdown/invalid.rs", &refused)
+            case_body(root, &out, "v0/transform.rs", &impossible)
                 .unwrap_err()
                 .0,
             "markdown"
@@ -297,8 +321,8 @@ mod tests {
     /// Two cases with the same directory name get distinct test names.
     #[test]
     fn duplicate_case_names_are_numbered() {
-        let one = case(Group::Valid, Some("json"), "json", None);
-        let two = case(Group::Valid, Some("json"), "json", None);
+        let one = case(Group::Valid, Some("json"), "json", None, None);
+        let two = case(Group::Valid, Some("json"), "json", None, None);
         let tests = render_tests(
             Path::new("/repo"),
             Path::new("/repo"),

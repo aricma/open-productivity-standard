@@ -6,6 +6,8 @@
 use super::helper::records;
 use crate::v0::doc::OpsDoc;
 use crate::v0::error::{Error, ValidationError};
+use crate::v0::format::Format;
+use crate::v0::limits::{Limit, check};
 use crate::v0::model::raw_task::RawTask;
 use crate::v0::model::task::Task;
 use crate::v0::model::value::{Metadata, MetadataValue};
@@ -115,7 +117,7 @@ pub(crate) fn read_records(input: &str) -> Result<Vec<Vec<String>>, Error> {
         }
     }
     if quoted {
-        return Err(Error::syntax("CSV", "unterminated quoted field"));
+        return Err(Error::syntax(Format::Csv, "unterminated quoted field"));
     }
     if started || !field.is_empty() || !record.is_empty() {
         record.push(field);
@@ -199,7 +201,7 @@ impl OpsDoc for Csv {
     fn parse(self, input: &str) -> Result<Vec<RawTask>, Error> {
         let mut rows = read_records(input)?;
         if rows.is_empty() {
-            return Err(Error::syntax("CSV", "the header row is required"));
+            return Err(Error::syntax(Format::Csv, "the header row is required"));
         }
         let header: Vec<Column> = rows.remove(0).iter().map(|h| classify(h)).collect();
 
@@ -226,6 +228,16 @@ impl OpsDoc for Csv {
                 keys.extend(metadata.keys().cloned());
             }
         }
+
+        // A key only one task carries still needs a cell in every row, so the
+        // document can be as large as `rows × distinct keys` cells — and no
+        // column can hold more than one key, so that is the ceiling. Refuse the
+        // shape here, before deciding which keys get columns, because that pass
+        // is proportional to the very product being refused. Each cell costs at
+        // least one byte, so a cell count over the bound is a lower bound on the
+        // document.
+        check(Limit::OutputBytes, rows.len().saturating_mul(keys.len()))
+            .map_err(Error::Validation)?;
 
         // A key gets a column when every value infers back unchanged; the rest
         // go into the reserved `metadata` JSON column, which the spec allows
@@ -291,12 +303,29 @@ impl OpsDoc for Csv {
                 fields.push(value.map(value_cell).unwrap_or_default());
             }
             out.push_str(&write_record(&fields));
+            // The facade checks the finished document too; this stops a
+            // runaway document from being built in the first place. A
+            // metadata column per distinct key is what makes CSV wide, so
+            // this is where an unbounded one shows up.
+            check(Limit::OutputBytes, out.len()).map_err(Error::Validation)?;
         }
         Ok(out)
     }
 }
 
 fn row_to_raw(header: &[Column], row: &[String]) -> Result<RawTask, Error> {
+    // Extra cells have no column to belong to, so they would be read as
+    // nothing: a row is no wider than the header.
+    if row.len() > header.len() {
+        return Err(Error::syntax(
+            Format::Csv,
+            format!(
+                "a row has {} cells but the header names {} columns",
+                row.len(),
+                header.len()
+            ),
+        ));
+    }
     let mut fields = Map::new();
     let mut json_metadata: Option<Map<String, Value>> = None;
     let mut column_metadata: Map<String, Value> = Map::new();

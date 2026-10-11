@@ -42,9 +42,13 @@ Cell values:
 The `metadata` column and the metadata columns are merged; a metadata
 column that repeats a key already in the `metadata` object is invalid, a
 duplicate. Any non-reserved column is metadata, so an unexpected column
-adds data instead of failing the read. A row without `title` or `status`
+adds data instead of failing the read — but a row is **no wider than the
+header**: extra cells have no column to belong to, and would be read as
+nothing, so a wider row is invalid. A row without `title` or `status`
 is invalid.
 `subtasks` is a JSON array of child ids, as in JSONL, and roots carry no
-id. `version` is a document property: every root row that declares it must
-declare the same value, and absent means the latest release. Values
+id — so **every subtask needs one**: the column has nothing else to carry the
+hierarchy with, and a writer that cannot name a subtask must refuse the model
+rather than let the child out as a root. (RFC-001) `version` is a document property: every root row that declares it must
+declare the same value, and absent leaves the choice to the reader. Values
 containing commas, quotes, or newlines are quoted per RFC 4180.

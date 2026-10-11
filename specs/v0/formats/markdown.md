@@ -1,5 +1,10 @@
 # Markdown
 
+> **Status: draft.** The mapping below is not settled, and this crate does
+> not claim the format. Notes and structure still collide (see *Notes carry
+> no level-1 heading*), so claiming this profile is not yet a promise of a
+> lossless round-trip.
+
 Markdown is tree-preserving and follows the document's outline. ATX
 headings at column zero are tasks: heading level `L` is the task's depth,
 so `#` is a root and `######` its six-level descendant. A heading's title

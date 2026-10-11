@@ -16,6 +16,14 @@ model may change before the first release.
   documents in other formats.
 - Version 0's decisions, proposals, and test corpus moved under `v0/`,
   alongside the model they belong to.
+- A document's `version` is now what it claims to follow, not a promise
+  about a release list: the standard asks that a declaration be findable
+  and that a document declare at most one, and leaves which versions are
+  accepted to each implementation. (RFC-013)
+- A CSV row may be no wider than its header. Extra cells had no column to
+  belong to and were read as nothing, so the row is invalid instead.
+- `formats/markdown.md` is marked draft: the profile is not settled and its
+  notes still collide with its structure.
 
 ### Added
 

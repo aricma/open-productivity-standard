@@ -172,16 +172,6 @@ fn title_with_a_line_break() {
 
 #[rustfmt::skip]
 #[test]
-fn unknown_version() {
-    let given = include_str!("../../../../../specs/v0/tests/yaml/invalid/unknown-version/given.yaml");
-    assert!(
-        ops_lib::v0::read(ops_lib::v0::Format::Yaml, given).is_err(),
-        "specs/v0/tests/yaml/invalid/unknown-version: must be rejected — unknown version must be rejected."
-    );
-}
-
-#[rustfmt::skip]
-#[test]
 fn uppercase_metadata_key() {
     let given = include_str!("../../../../../specs/v0/tests/yaml/invalid/uppercase-metadata-key/given.yaml");
     assert!(

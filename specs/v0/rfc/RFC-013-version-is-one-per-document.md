@@ -24,17 +24,21 @@ document.
 
 ## Decision
 
-A document declares one version. It is optional; absent means the latest
-released version applies. Every declaration in a document must be
-identical, or the document is invalid, and a `version` never appears
-below a root.
+A document declares at most one version. It is optional, and a document
+that declares none leaves the choice to its reader. Every declaration in a
+document must be identical, or the document is invalid, and a `version`
+never appears below a root.
 
-The carriers stay format-native, with no wrapper: Markdown uses
-frontmatter, and JSON, YAML, JSONL, and CSV write `version` on root
-records. Because the field name is fixed, finding the declared
-version is a version-agnostic syntax scan — the library exposes it as
-`detect_version` — so the reader can choose a version module before
-parsing the document.
+Which versions are accepted is not the standard's call: it depends on what
+the specifications have released and what a tool supports, so the standard
+names none. The obligation it does place is on the shape of the
+declaration: the field name is fixed, so finding it is a version-agnostic
+syntax scan — the library exposes it as `detect_version` — and a reader can
+choose a version module before parsing the document.
+
+One version per document also keeps the carriers format-native, with no
+wrapper: Markdown uses frontmatter, and JSON, YAML, JSONL, and CSV write
+`version` on root records.
 
 ## Consequences
 
@@ -47,5 +51,8 @@ root, and a rootless document can declare a version only where the format
 has a document header — Markdown frontmatter. In the flat family the
 version rides on root records, because CSV and JSONL have nowhere else to
 put it. Detection is decoupled from the model: it reads a fixed key and
-does not validate the value, which the chosen module does when it reads
-the document.
+does not validate the value.
+
+An implementation still has to decide what to do with a version it does
+not implement, and that is its own policy rather than the standard's — in
+this library it is a coded rejection (`unsupported-version`).

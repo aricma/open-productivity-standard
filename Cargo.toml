@@ -1,3 +1,8 @@
 [workspace]
 members = ["ops", "tools/gen-corpus"]
 resolver = "3"
+
+# Deny `unsafe` for everything in the workspace: the reader, the writer, and the
+# tools that generate their tests. A member opts in with `[lints] workspace = true`.
+[workspace.lints.rust]
+unsafe_code = "deny"

@@ -2,6 +2,16 @@
 
 #[rustfmt::skip]
 #[test]
+fn a_row_with_more_cells_than_the_header() {
+    let given = include_str!("../../../../../specs/v0/tests/csv/invalid/a-row-with-more-cells-than-the-header/given.csv");
+    assert!(
+        ops_lib::v0::read(ops_lib::v0::Format::Csv, given).is_err(),
+        "specs/v0/tests/csv/invalid/a-row-with-more-cells-than-the-header: must be rejected — a row wider than the header must be rejected, not truncated."
+    );
+}
+
+#[rustfmt::skip]
+#[test]
 fn cyclic_reference() {
     let given = include_str!("../../../../../specs/v0/tests/csv/invalid/cyclic-reference/given.csv");
     assert!(
@@ -122,6 +132,16 @@ fn mixed_versions() {
 
 #[rustfmt::skip]
 #[test]
+fn one_root_and_a_cycle() {
+    let given = include_str!("../../../../../specs/v0/tests/csv/invalid/one-root-and-a-cycle/given.csv");
+    assert!(
+        ops_lib::v0::read(ops_lib::v0::Format::Csv, given).is_err(),
+        "specs/v0/tests/csv/invalid/one-root-and-a-cycle: must be rejected — a cycle that sits beside a root must be rejected, not dropped."
+    );
+}
+
+#[rustfmt::skip]
+#[test]
 fn one_root_with_zero_levels_of_tasks_with_duplicate_metadata_key() {
     let given = include_str!("../../../../../specs/v0/tests/csv/invalid/one-root-with-zero-levels-of-tasks-with-duplicate-metadata-key/given.csv");
     assert!(
@@ -177,16 +197,6 @@ fn title_with_a_line_break() {
     assert!(
         ops_lib::v0::read(ops_lib::v0::Format::Csv, given).is_err(),
         "specs/v0/tests/csv/invalid/title-with-a-line-break: must be rejected — a task whose title contains a line break must be rejected."
-    );
-}
-
-#[rustfmt::skip]
-#[test]
-fn unknown_version() {
-    let given = include_str!("../../../../../specs/v0/tests/csv/invalid/unknown-version/given.csv");
-    assert!(
-        ops_lib::v0::read(ops_lib::v0::Format::Csv, given).is_err(),
-        "specs/v0/tests/csv/invalid/unknown-version: must be rejected — a declared version must be released."
     );
 }
 

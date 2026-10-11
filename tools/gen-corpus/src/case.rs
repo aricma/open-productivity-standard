@@ -4,10 +4,6 @@ use crate::formats;
 
 /// The kinds of case a format directory holds. Every kind but `Transform` lives
 /// inside one format; `Transform` crosses formats and sits at the top.
-///
-/// `Invalid` runs both ways: a `given` in the enclosing format is rejected by
-/// its reader, and a `given` in another format is a valid model that only the
-/// enclosing format's writer refuses.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Group {
     Valid,
@@ -39,11 +35,6 @@ impl Group {
     pub(crate) fn crosses_formats(self) -> bool {
         matches!(self, Group::Transform)
     }
-
-    /// Whether a case of this kind carries an expectation file.
-    pub(crate) fn requires_expectation(self) -> bool {
-        matches!(self, Group::Roundtrip | Group::Transform)
-    }
 }
 
 /// One corpus directory, read.
@@ -57,7 +48,11 @@ pub(crate) struct Case {
     pub(crate) given_ext: String,
     /// Relative to the repository root, for `include_str!`.
     pub(crate) given: String,
-    /// `(extension, path relative to the repository root)`.
+    /// What this case writes, if it writes at all: the format its result must
+    /// be in.
+    pub(crate) target_ext: Option<String>,
+    /// `(extension, path relative to the repository root)` of the document the
+    /// result must equal. Absent from a conversion that must fail.
     pub(crate) expectation: Option<(String, String)>,
 }
 
@@ -80,49 +75,29 @@ impl Case {
         }
     }
 
-    /// Whether this case hands the enclosing format a model it cannot carry, so
-    /// the failure is on write rather than on read. Inside a format directory,
-    /// an `invalid` case whose `given` is in another format is that shape.
-    pub(crate) fn rejects_the_writer(&self) -> bool {
-        let (Some(format), Group::Invalid) = (&self.format, self.group) else {
-            return false;
-        };
-        !formats::same(&self.version, format, &self.given_ext)
+    /// Whether this case asserts a conversion that cannot be done: the model is
+    /// valid, and the format it is asked to write simply cannot carry it.
+    pub(crate) fn must_fail(&self) -> bool {
+        self.group == Group::Transform && self.expectation.is_none()
     }
 
     /// The source paths this case reads from and writes to, as
     /// `ops_lib::v0::Format::…`. The write is absent when the case only reads.
     pub(crate) fn format_paths(&self) -> (Option<String>, Option<String>) {
         let reads = formats::variant_path(&self.version, &self.given_ext);
-        let writes = if self.rejects_the_writer() {
-            self.format
-                .as_deref()
-                .and_then(|format| formats::variant_path(&self.version, format))
-        } else {
-            match self.group {
-                Group::Roundtrip => reads.clone(),
-                Group::Transform => self
-                    .expectation
-                    .as_ref()
-                    .and_then(|(ext, _)| formats::variant_path(&self.version, ext)),
-                Group::Valid | Group::Invalid => None,
-            }
-        };
+        let writes = self
+            .target_ext
+            .as_deref()
+            .and_then(|target| formats::variant_path(&self.version, target));
         (reads, writes)
     }
 
-    /// Every format name or extension this case exercises.
+    /// Every format name or extension this case exercises, the one it reads
+    /// first. A case runs only when all of them are claimed.
     pub(crate) fn format_names(&self) -> Vec<&str> {
         let mut names = vec![self.given_ext.as_str()];
-        if let Some((ext, _)) = &self.expectation {
-            names.push(ext);
-        }
-        if self.rejects_the_writer() {
-            names.push(
-                self.format
-                    .as_deref()
-                    .expect("a writer-reject case is inside a format directory"),
-            );
+        if let Some(target) = &self.target_ext {
+            names.push(target);
         }
         names
     }
@@ -151,7 +126,13 @@ mod tests {
 
     use super::*;
 
-    fn case(group: Group, format: Option<&str>, given: &str, expectation: Option<&str>) -> Case {
+    fn case(
+        group: Group,
+        format: Option<&str>,
+        given: &str,
+        target: Option<&str>,
+        expectation: Option<&str>,
+    ) -> Case {
         Case {
             version: "v0".to_string(),
             format: format.map(str::to_string),
@@ -160,6 +141,7 @@ mod tests {
             claim: "the claim".to_string(),
             given_ext: given.to_string(),
             given: format!("specs/v0/tests/place/given.{given}"),
+            target_ext: target.map(str::to_string),
             expectation: expectation.map(|ext| {
                 (
                     ext.to_string(),
@@ -169,25 +151,22 @@ mod tests {
         }
     }
 
-    /// Which direction an `invalid` case runs: the enclosing format's reader, or
-    /// — when the given is in another format — its writer.
-    #[test]
-    fn invalid_runs_the_way_the_given_says() {
-        assert!(!case(Group::Invalid, Some("json"), "json", None).rejects_the_writer());
-        assert!(case(Group::Invalid, Some("markdown"), "json", None).rejects_the_writer());
-        assert!(!case(Group::Valid, Some("markdown"), "md", None).rejects_the_writer());
-    }
-
     /// The paths a case needs, which is what decides whether it can run at all.
     #[test]
     fn a_case_names_the_formats_it_reads_and_writes() {
-        let reads_only = case(Group::Valid, Some("json"), "json", None);
+        let reads_only = case(Group::Valid, Some("json"), "json", None, None);
         assert_eq!(
             reads_only.format_paths(),
             (Some("ops_lib::v0::Format::Json".to_string()), None)
         );
 
-        let roundtrip = case(Group::Roundtrip, Some("json"), "json", Some("json"));
+        let roundtrip = case(
+            Group::Roundtrip,
+            Some("json"),
+            "json",
+            Some("json"),
+            Some("json"),
+        );
         assert_eq!(
             roundtrip.format_paths(),
             (
@@ -196,8 +175,8 @@ mod tests {
             )
         );
 
-        // A transform writes the expectation's format, not the given's.
-        let transform = case(Group::Transform, None, "json", Some("yaml"));
+        // A transform writes the target, not the format it read.
+        let transform = case(Group::Transform, None, "json", Some("yaml"), Some("yaml"));
         assert_eq!(
             transform.format_paths(),
             (
@@ -205,27 +184,33 @@ mod tests {
                 Some("ops_lib::v0::Format::Yaml".to_string())
             )
         );
+    }
 
-        // A writer-reject case writes the format it is filed under.
-        let refused = case(Group::Invalid, Some("markdown"), "json", None);
-        assert_eq!(
-            refused.format_paths(),
-            (
-                Some("ops_lib::v0::Format::Json".to_string()),
-                None // Markdown is not claimed, so there is no path for it.
-            )
-        );
-        assert_eq!(refused.format_names(), vec!["json", "markdown"]);
+    /// A conversion with nothing to compare against asserts that it fails, and
+    /// that is the only kind of case filed by a model that is itself valid.
+    #[test]
+    fn a_conversion_without_an_expectation_must_fail() {
+        let impossible = case(Group::Transform, None, "json", Some("jsonl"), None);
+        assert!(impossible.must_fail());
+        assert_eq!(impossible.format_names(), vec!["json", "jsonl"]);
+
+        let possible = case(Group::Transform, None, "json", Some("yaml"), Some("yaml"));
+        assert!(!possible.must_fail());
+
+        // Only a conversion may assert a failure; an `invalid` case is a
+        // document the reader must reject.
+        let invalid = case(Group::Invalid, Some("jsonl"), "jsonl", None, None);
+        assert!(!invalid.must_fail());
     }
 
     #[test]
     fn a_corpus_path_says_where_the_case_lives() {
         assert_eq!(
-            case(Group::Valid, Some("json"), "json", None).corpus_path(),
+            case(Group::Valid, Some("json"), "json", None, None).corpus_path(),
             "specs/v0/tests/json/valid/case"
         );
         assert_eq!(
-            case(Group::Transform, None, "json", Some("yaml")).corpus_path(),
+            case(Group::Transform, None, "json", Some("yaml"), Some("yaml")).corpus_path(),
             "specs/v0/tests/transform/case"
         );
     }

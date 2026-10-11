@@ -232,16 +232,6 @@ fn trailing_garbage() {
 
 #[rustfmt::skip]
 #[test]
-fn unknown_version() {
-    let given = include_str!("../../../../../specs/v0/tests/json/invalid/unknown-version/given.json");
-    assert!(
-        ops_lib::v0::read(ops_lib::v0::Format::Json, given).is_err(),
-        "specs/v0/tests/json/invalid/unknown-version: must be rejected — unknown version must be rejected."
-    );
-}
-
-#[rustfmt::skip]
-#[test]
 fn version_on_subtask() {
     let given = include_str!("../../../../../specs/v0/tests/json/invalid/version-on-subtask/given.json");
     assert!(

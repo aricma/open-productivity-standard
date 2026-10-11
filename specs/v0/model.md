@@ -213,18 +213,21 @@ location is a `file://` URL.
 
 ## About the version
 
-A version names the OPS Specifications a document is modeled after. It is
-optional, and one per document:
+A version names the OPS Specifications a document follows. It is optional,
+and one per document:
 
-- A document declares **one** version: every declaration in it must be
-  identical, or the document is invalid. A document never mixes versions.
-- It must be a released version of the OPS Specifications. If none is set,
-  the latest released version applies.
+- A document declares **at most one** version: every declaration in it must
+  be identical, or the document is invalid. A document never mixes versions,
+  and one that declares none leaves the choice to its reader. (RFC-013)
+- A declaration must be **findable without reading the whole document**: the
+  field name is fixed, so a reader can choose which version of the
+  specifications to read with before it parses.
 - A `version` appears on roots only, and never below a root.
 
-Each [format](formats/README.md) says where a document writes it. Because
-the field name is fixed, a reader can find the declared version before
-parsing, and so choose the version of the specifications to read it with.
+Which versions an implementation accepts is the implementation's own
+decision — it depends on what the specifications have released and what the
+tool supports — so the standard names none. Each
+[format](formats/README.md) says where a document writes it.
 
 ---
 

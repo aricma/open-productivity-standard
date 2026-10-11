@@ -21,7 +21,7 @@ pub(crate) mod model;
 
 use doc::OpsDoc;
 use doc::csv::Csv;
-use doc::helper::{forest, validate_forest};
+use doc::helper::{check_subtask_ids, forest, validate_forest};
 use doc::json::Json;
 use doc::jsonl::Jsonl;
 use doc::yaml::Yaml;
@@ -43,26 +43,24 @@ pub fn read(format: Format, input: &str) -> Result<Vec<Task>, Error> {
         Format::Jsonl => Jsonl.parse(input)?,
         Format::Csv => Csv.parse(input)?,
     };
-    let tasks = match format {
-        Format::Json | Format::Yaml => raw
-            .iter()
+    let tasks = if format.nests() {
+        raw.iter()
             .map(RawTask::to_task)
-            .collect::<Result<Vec<_>, Error>>()?,
-        Format::Jsonl | Format::Csv => {
-            check(Limit::Tasks, raw.len()).map_err(Error::Validation)?;
-            forest(
-                raw.iter()
-                    .map(RawTask::to_flat_task)
-                    .collect::<Result<Vec<_>, Error>>()?,
-            )?
-        }
+            .collect::<Result<Vec<_>, Error>>()?
+    } else {
+        check(Limit::Tasks, raw.len()).map_err(Error::Validation)?;
+        forest(
+            raw.iter()
+                .map(RawTask::to_flat_task)
+                .collect::<Result<Vec<_>, Error>>()?,
+        )?
     };
     validate_forest(&tasks).map_err(Error::Validation)?;
     version::check_document_versions(&tasks)?;
     Ok(tasks)
 }
 
-/// The version this document declares, or `None` for the latest release.
+/// The version this document declares, or `None` when it declares none.
 /// Version-agnostic: it never calls a version module.
 pub fn detect_version(format: Format, input: &str) -> Result<Option<String>, Error> {
     detect::detect_version(format, input)
@@ -72,10 +70,17 @@ pub fn detect_version(format: Format, input: &str) -> Result<Option<String>, Err
 pub fn write(format: Format, tasks: &[Task]) -> Result<String, Error> {
     version::check_document_versions(tasks)?;
     validate_forest(tasks).map_err(Error::Validation)?;
-    match format {
+    if !format.nests() {
+        // A flat document references tasks by id, so every subtask needs one.
+        check_subtask_ids(tasks).map_err(Error::Validation)?;
+    }
+    let doc = match format {
         Format::Json => Json.write(tasks),
         Format::Yaml => Yaml.write(tasks),
         Format::Jsonl => Jsonl.write(tasks),
         Format::Csv => Csv.write(tasks),
-    }
+    }?;
+    // A document we would refuse to read back is not worth writing.
+    check(Limit::OutputBytes, doc.len()).map_err(Error::Validation)?;
+    Ok(doc)
 }

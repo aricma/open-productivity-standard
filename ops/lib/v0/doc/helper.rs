@@ -92,6 +92,27 @@ pub(crate) fn validate_forest(tasks: &[Task]) -> Result<(), ValidationError> {
     Ok(())
 }
 
+/// A flat format references tasks by id, so every subtask needs one. A root
+/// does not, and a nested format needs none at all.
+pub(crate) fn check_subtask_ids(tasks: &[Task]) -> Result<(), ValidationError> {
+    fn walk(task: &Task) -> Result<(), ValidationError> {
+        for child in &task.subtasks {
+            if child.id.is_none() {
+                return Err(ValidationError::SubtaskWithoutId {
+                    task: task.title.clone(),
+                    subtask: child.title.clone(),
+                });
+            }
+            walk(child)?;
+        }
+        Ok(())
+    }
+    for task in tasks {
+        walk(task)?;
+    }
+    Ok(())
+}
+
 /// Flatten a forest into records (pre-order, root first), shared by the
 /// JSONL and CSV writers.
 pub(crate) fn records(tasks: &[Task]) -> Vec<FlatTask> {
@@ -111,8 +132,7 @@ fn flatten(task: &Task, out: &mut Vec<FlatTask>) {
 
 /// Rebuild a forest from flat records, enforcing the graph rules:
 /// unique ids, every referenced id exists, one parent per task, no
-/// cycles (a collection with no root is a cycle), `version` on roots
-/// only.
+/// cycles, `version` on roots only.
 pub(crate) fn forest(records: Vec<FlatTask>) -> Result<Vec<Task>, Error> {
     check(Limit::Tasks, records.len()).map_err(Error::Validation)?;
     let n = records.len();
@@ -153,15 +173,18 @@ pub(crate) fn forest(records: Vec<FlatTask>) -> Result<Vec<Task>, Error> {
         }
     }
 
-    // Every task descends from exactly one root; a fully referenced
-    // collection is a cycle (e.g. a ↔ b).
+    // Every task descends from exactly one root, so building the trees from
+    // the unreferenced records walks the whole document — unless something is
+    // in a cycle, which no root leads to. `seen` catches both that and a
+    // back-edge reachable from a root.
+    let mut seen = vec![false; n];
     let mut roots = Vec::new();
     for (i, is_root) in referenced.iter().enumerate() {
         if !*is_root {
-            roots.push(build_tree(&records, &children, i, 0)?);
+            roots.push(build_tree(&records, &children, i, 0, &mut seen)?);
         }
     }
-    if !records.is_empty() && roots.is_empty() {
+    if seen.iter().any(|seen| !*seen) {
         return Err(Error::Validation(ValidationError::CyclicReference));
     }
     Ok(roots)
@@ -172,8 +195,13 @@ fn build_tree(
     children: &[Vec<usize>],
     i: usize,
     depth: usize,
+    seen: &mut [bool],
 ) -> Result<Task, Error> {
     check(Limit::Depth, depth).map_err(Error::Validation)?;
+    if seen[i] {
+        return Err(Error::Validation(ValidationError::CyclicReference));
+    }
+    seen[i] = true;
     let r = &records[i];
     let mut task = Task {
         title: r.title.clone(),
@@ -186,7 +214,7 @@ fn build_tree(
     };
     for &j in &children[i] {
         task.subtasks
-            .push(build_tree(records, children, j, depth + 1)?);
+            .push(build_tree(records, children, j, depth + 1, seen)?);
     }
     Ok(task)
 }
