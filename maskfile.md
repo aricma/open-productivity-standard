@@ -140,7 +140,9 @@ cargo deny check
 # A reader for a small model has no business being megabytes. The crate is
 # ~1.3 MiB today, so 2 MiB leaves room for its own code plus what `regex`
 # and `serde` monomorphize into it, and trips on an accidental heavyweight
-# dependency.
+# dependency. This block runs where that holds: 1 282 432 bytes on macOS and
+# 1 679 352 on Linux, against 2 320 838 on Windows, where the object format
+# records more around the same code. The PowerShell block has the rest.
 cargo build --release -p ops-lib
 size=$(wc -c < target/release/libops_lib.rlib | tr -d ' ')
 budget=$((2 * 1024 * 1024))
@@ -175,10 +177,15 @@ $env:RUSTDOCFLAGS = "-D warnings"
 cargo doc --workspace --no-deps --all-features
 cargo audit
 cargo deny check
-# See the sh block for why the budget is 2 MiB.
+# See the sh block for the budget. Windows needs 3 MiB because of the object
+# format, not our code: the code, data and unwind tables come to ~465 KB on
+# every platform, but ELF and COFF keep a section, a symbol and relocations
+# per function so the linker can drop dead code, where Mach-O merges code and
+# lets the linker split on symbols. Measured: 2 320 838 bytes here against
+# 1 282 432 on macOS and 1 679 352 on Linux.
 cargo build --release -p ops-lib
 $size = (Get-Item target/release/ops_lib.rlib).Length
-$budget = 2 * 1024 * 1024
+$budget = 3 * 1024 * 1024
 Write-Host "ops-lib rlib: $size bytes (budget $budget)"
 if ($size -gt $budget) { Write-Error 'the compiled library outgrew its budget'; exit 1 }
 ```
