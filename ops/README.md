@@ -21,7 +21,9 @@ A Rust reader/writer for the
 - **Validates** on both sides: parsing never returns an invalid forest,
   and in-memory models are checked before serializing (duplicate ids,
   metadata key charset, version placement and supported versions, and a
-  `done` task with an `open` subtask).
+  `done` task with an `open` subtask). A value that carries nothing — an
+  empty string, list, map, or `null` — is read as absent and never written
+  back, so "present but empty" is not a second way to spell "not set".
 - **Writes the same bytes twice**: output is idempotent — write, read,
   write again is byte-stable — so reformatting a file never churns it.
   Layout matters where a format depends on it (CSV quoting, YAML
@@ -46,6 +48,10 @@ ops/
 │   │   └── version.rs   the official release list + version check
 │   └── v0/              the version-0 implementation
 │       ├── mod.rs       read/write + the published types
+│       ├── detect.rs    the version probe, without a version module
+│       ├── error.rs     Error and ValidationError, with stable codes
+│       ├── format.rs    the formats this crate claims
+│       ├── limits.rs    the resource guardrails
 │       ├── version.rs   applies the shared release check to v0 tasks
 │       ├── doc/         the OpsDoc trait + one file per format
 │       │                (json, yaml, jsonl, csv); reads/writes raw_task
