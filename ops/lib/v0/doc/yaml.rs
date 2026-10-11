@@ -7,10 +7,32 @@ use serde_yaml::Value;
 
 pub struct Yaml;
 
+/// YAML resolves `.inf`, `-.inf`, and `.nan` to non-finite floats, which JSON —
+/// and so the model — cannot carry. The value is kept as the string YAML spells
+/// it with, so a scalar the model has no shape for is not silently dropped when
+/// the two are bridged.
+fn spell_out_non_finite_numbers(value: &mut Value) {
+    match value {
+        Value::Number(number) if number.as_f64().is_some_and(|value| !value.is_finite()) => {
+            let spelling = match number.as_f64() {
+                Some(value) if value.is_nan() => ".nan",
+                Some(value) if value.is_sign_positive() => ".inf",
+                _ => "-.inf",
+            };
+            *value = Value::String(spelling.to_string());
+        }
+        Value::Sequence(items) => items.iter_mut().for_each(spell_out_non_finite_numbers),
+        Value::Mapping(map) => map.values_mut().for_each(spell_out_non_finite_numbers),
+        Value::Tagged(tagged) => spell_out_non_finite_numbers(&mut tagged.value),
+        _ => {}
+    }
+}
+
 impl OpsDoc for Yaml {
     fn parse(self, input: &str) -> Result<Vec<RawTask>, Error> {
-        let value: Value =
+        let mut value: Value =
             serde_yaml::from_str(input).map_err(|e| Error::syntax(Format::Yaml, e.to_string()))?;
+        spell_out_non_finite_numbers(&mut value);
         match value {
             Value::Sequence(items) => items
                 .into_iter()
