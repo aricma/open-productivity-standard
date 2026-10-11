@@ -12,6 +12,20 @@ runs:
     - shell: bash
       run: cargo run -q -p gen-corpus -- --check
     - shell: bash
+      run: |
+        # A reader for a small model has no business being megabytes. The mask's
+        # `build` step documents why the budget is 2 MiB; this keeps the gate on
+        # the runners too, where a new heavyweight dependency would show up.
+        cargo build --release -p ops-lib
+        rlib=$(ls target/release/libops_lib.rlib 2>/dev/null || ls target/release/ops_lib.rlib)
+        size=$(wc -c < "$rlib" | tr -d ' ')
+        budget=$((2 * 1024 * 1024))
+        printf 'ops-lib rlib: %s bytes (budget %s)\n' "$size" "$budget"
+        if [ "$size" -gt "$budget" ]; then
+          echo 'the compiled library outgrew its budget' >&2
+          exit 1
+        fi
+    - shell: bash
       run: cargo check --all-targets --all-features
     - shell: bash
       run: cargo clippy --all-targets --all-features -- -D warnings
