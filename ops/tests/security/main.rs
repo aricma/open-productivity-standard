@@ -395,10 +395,16 @@ fn metadata_value_limit_counts_escaped_bytes() {
 /// refuses rather than building it.
 #[test]
 fn a_runaway_csv_write_is_refused() {
+    // A CSV document is `rows x distinct keys` cells, and the writer refuses
+    // one whose cells could pass the output bound. Every task here names its
+    // own keys, so the document's key count is `rows * MAX_METADATA_PAIRS` and
+    // its cell count is that times the rows: this is the first row count whose
+    // cells are over the bound.
+    let rows = MAX_OUTPUT_BYTES / (MAX_METADATA_PAIRS * MAX_METADATA_PAIRS) + 1;
     let mut tasks = Vec::new();
-    for i in 0..2_000 {
+    for i in 0..rows {
         let mut metadata = Metadata::new();
-        for k in 0..8 {
+        for k in 0..MAX_METADATA_PAIRS {
             metadata.insert(format!("t{i:05}_k{k}"), MetadataValue::String("v".into()));
         }
         tasks.push(Task {
