@@ -118,6 +118,19 @@ if [ "${fix:-}" = "true" ]; then
 fi
 cargo check --workspace --all-targets --all-features
 cargo clippy --workspace --all-targets --all-features -- -D warnings
+# Every format is a cargo feature, and each has to build on its own: a format
+# that only compiles beside another is not behind a feature, and the code of a
+# format that is off should be gone rather than merely unused.
+for feature in json yaml jsonl csv; do
+    cargo clippy -q -p ops-lib --no-default-features --features "$feature" --all-targets -- -D warnings
+    echo "ops-lib builds with only $feature"
+done
+# The crate is a reader and a writer, so with no format it refuses to build,
+# and says which ones there are.
+if cargo check -q -p ops-lib --no-default-features 2>/dev/null; then
+    echo 'ops-lib built with no format enabled' >&2
+    exit 1
+fi
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features
 cargo audit
 cargo deny check
@@ -143,6 +156,18 @@ $env:PATH = "$env:MASKFILE_DIR\tmp\bin;$env:PATH"
 if ($fix) { cargo clippy --workspace --fix --allow-dirty --all-targets --all-features -- -D warnings }
 cargo check --workspace --all-targets --all-features
 cargo clippy --workspace --all-targets --all-features -- -D warnings
+# See the sh block: every format builds alone, and no format does not build.
+foreach ($feature in "json", "yaml", "jsonl", "csv") {
+    cargo clippy -q -p ops-lib --no-default-features --features $feature --all-targets -- -D warnings
+    Write-Host "ops-lib builds with only $feature"
+}
+$noFormatBuilt = $true
+try { cargo check -q -p ops-lib --no-default-features }
+catch { $noFormatBuilt = $false }
+if ($noFormatBuilt) {
+    Write-Error 'ops-lib built with no format enabled'
+    exit 1
+}
 $env:RUSTDOCFLAGS = "-D warnings"
 cargo doc --workspace --no-deps --all-features
 cargo audit
