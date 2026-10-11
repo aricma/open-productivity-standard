@@ -6,3 +6,7 @@ resolver = "3"
 # tools that generate their tests. A member opts in with `[lints] workspace = true`.
 [workspace.lints.rust]
 unsafe_code = "deny"
+
+# See clippy.toml: no library code asks the machine for its parallelism.
+[workspace.lints.clippy]
+disallowed_methods = "deny"

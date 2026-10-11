@@ -1,0 +1,7 @@
+# A library never asks the machine how much it can do at once. That number is a
+# property of the caller's environment, not of a document, and reading it would
+# make a read or a write behave differently on different hosts — which is
+# exactly what a reproducible test cannot have. If the reader or the writer ever
+# does work in parallel, the count comes in from the caller, and the tests pin
+# it to one.
+disallowed-methods = ["std::thread::available_parallelism"]
