@@ -75,6 +75,18 @@ fn tasks(shape: &str, n: usize) -> Vec<Task> {
     vec![root]
 }
 
+/// Whether any measured scale is over `allowance` times the one before it: the
+/// condition the scaling assertions apply, and the reason to measure a pass
+/// again.
+fn out_of_proportion(times: &[(Duration, Duration)], allowance: f64) -> bool {
+    (1..times.len()).any(|index| {
+        [times[index - 1].0, times[index - 1].1]
+            .iter()
+            .zip([times[index].0, times[index].1])
+            .any(|(small, large)| large.as_nanos() as f64 > small.as_nanos() as f64 * allowance)
+    })
+}
+
 /// One measurement of `work`.
 fn time(work: &impl Fn()) -> Duration {
     let start = Instant::now();
@@ -114,6 +126,18 @@ fn best_pair_or_retry(
     }
     println!("\n   pair breached its allowance; measuring both again\n");
     best_pair(&one, &other)
+}
+
+/// The scaling check the re-measure hangs on: linear passes, a runaway does
+/// not. No timing, so it cannot flake.
+#[test]
+fn a_scale_out_of_proportion_is_reported() {
+    let ms = Duration::from_millis;
+    let linear = [(ms(1), ms(1)), (ms(5), ms(5)), (ms(11), ms(11))];
+    assert!(!out_of_proportion(&linear, 20.0));
+    // One side of one pair is twenty-one times the scale before it.
+    let runaway = [(ms(1), ms(1)), (ms(5), ms(5)), (ms(150), ms(9))];
+    assert!(out_of_proportion(&runaway, 20.0));
 }
 
 /// The harness's own guard: a pair that breaches its allowance is measured
@@ -167,16 +191,29 @@ fn read_and_write_scale_linearly() {
                 }
                 prepared
             };
-            let mut best_times = vec![(Duration::MAX, Duration::MAX); prepared.len()];
-            for _ in 0..RUNS {
-                for (index, (_, set, doc)) in prepared.iter().enumerate() {
-                    best_times[index].0 = best_times[index].0.min(time(&|| {
-                        v0::write(format, set).expect("write");
-                    }));
-                    best_times[index].1 = best_times[index].1.min(time(&|| {
-                        v0::read(format, doc).expect("read");
-                    }));
+            let measure = || {
+                let mut best = vec![(Duration::MAX, Duration::MAX); prepared.len()];
+                for _ in 0..RUNS {
+                    for (index, (_, set, doc)) in prepared.iter().enumerate() {
+                        best[index].0 = best[index].0.min(time(&|| {
+                            v0::write(format, set).expect("write");
+                        }));
+                        best[index].1 = best[index].1.min(time(&|| {
+                            v0::read(format, doc).expect("read");
+                        }));
+                    }
                 }
+                best
+            };
+            // The allowance the assertions below apply: each scale against the
+            // one before it. A breach means a slow spell covered a whole pass,
+            // so measure the pass again — a regression is still there on the
+            // second, a busy machine is not.
+            let allowance = 10.0 * f64::from(MARGIN);
+            let mut best_times = measure();
+            if out_of_proportion(&best_times, allowance) {
+                println!("\n   a scaling ratio breached its allowance; measuring again\n");
+                best_times = measure();
             }
             for (index, (n, _, _)) in prepared.iter().enumerate() {
                 rows.push((format, Op::Write, shape, *n, best_times[index].0));
