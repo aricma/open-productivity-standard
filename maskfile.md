@@ -119,6 +119,18 @@ cargo clippy --all-targets --all-features -- -D warnings
 RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features
 cargo audit
 cargo deny check
+# A reader for a small model has no business being megabytes. The crate is
+# ~1.3 MiB today, so 2 MiB leaves room for its own code plus what `regex`
+# and `serde` monomorphize into it, and trips on an accidental heavyweight
+# dependency.
+cargo build --release -p ops-lib
+size=$(wc -c < target/release/libops_lib.rlib | tr -d ' ')
+budget=$((2 * 1024 * 1024))
+printf 'ops-lib rlib: %s bytes (budget %s)\n' "$size" "$budget"
+if [ "$size" -gt "$budget" ]; then
+    echo 'the compiled library outgrew its budget' >&2
+    exit 1
+fi
 ```
 
 ```powershell
@@ -132,6 +144,12 @@ $env:RUSTDOCFLAGS = "-D warnings"
 cargo doc --no-deps --all-features
 cargo audit
 cargo deny check
+# See the sh block for why the budget is 2 MiB.
+cargo build --release -p ops-lib
+$size = (Get-Item target/release/ops_lib.rlib).Length
+$budget = 2 * 1024 * 1024
+Write-Host "ops-lib rlib: $size bytes (budget $budget)"
+if ($size -gt $budget) { Write-Error 'the compiled library outgrew its budget'; exit 1 }
 ```
 
 ## gen-corpus
