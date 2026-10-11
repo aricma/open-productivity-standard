@@ -1,0 +1,1 @@
+a nested JSON document converts to CSV, and the hierarchy survives as child ids.

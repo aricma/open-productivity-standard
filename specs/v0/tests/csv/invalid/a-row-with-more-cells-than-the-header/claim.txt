@@ -1,0 +1,1 @@
+a row wider than the header must be rejected, not truncated.

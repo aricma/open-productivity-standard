@@ -1,0 +1,9 @@
+version: "0"
+title: Work
+status: open
+metadata:
+  priority: high
+subtasks:
+  - id: a
+    title: Child
+    status: done

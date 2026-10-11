@@ -1,0 +1,1 @@
+a string that parses as JSON goes in the CSV metadata column, so it reads back as the string it was.

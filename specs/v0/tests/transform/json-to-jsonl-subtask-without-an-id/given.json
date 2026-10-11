@@ -1,0 +1,5 @@
+{
+  "title": "Root",
+  "status": "open",
+  "subtasks": [{ "title": "Child", "status": "open" }]
+}
