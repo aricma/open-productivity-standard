@@ -254,14 +254,31 @@ features)
     ;;
 acceptance) cargo test -p ops-lib --test acceptance ;;
 security) cargo test -p ops-lib --test security ;;
-performance) cargo test -p ops-lib --test performance -- --nocapture ;;
+performance)
+    # The envelope, printed so a log says what machine produced the numbers.
+    # One test thread: the harness would otherwise run these tests in parallel
+    # and time them against each other, which makes the result depend on how
+    # many cores the machine has.
+    cores=$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo "?")
+    limit=""
+    # A container's CPU limit is a time quota, not a core count, so the visible
+    # core count above stays the host's: print the quota that actually applies.
+    if [ -r /sys/fs/cgroup/cpu.max ]; then
+        limit=", cpu.max $(cat /sys/fs/cgroup/cpu.max)"
+    fi
+    if [ -r /sys/fs/cgroup/memory.max ]; then
+        limit="$limit, memory limit $(cat /sys/fs/cgroup/memory.max)"
+    fi
+    echo "performance profile: $(uname -srm), $cores cores$limit, one test thread"
+    cargo test -p ops-lib --test performance -- --nocapture --test-threads=1
+    ;;
 all)
     cargo test --lib --test essentials
     cargo test -p gen-corpus
     cargo test --doc
     cargo test -p ops-lib --test acceptance
     cargo test -p ops-lib --test security
-    cargo test -p ops-lib --test performance -- --nocapture
+    $MASK test --profile performance
     $MASK test --profile features
     ;;
 esac
@@ -292,14 +309,19 @@ switch ($profile) {
     }
     "acceptance" { cargo test -p ops-lib --test acceptance }
     "security" { cargo test -p ops-lib --test security }
-    "performance" { cargo test -p ops-lib --test performance -- --nocapture }
+    "performance" {
+        # See the sh block: the envelope, and one test thread.
+        $cores = [Environment]::ProcessorCount
+        Write-Host "performance profile: $([Environment]::OSVersion.VersionString), $cores cores, one test thread"
+        cargo test -p ops-lib --test performance -- --nocapture --test-threads=1
+    }
     "all" {
         cargo test --lib --test essentials
         cargo test -p gen-corpus
         cargo test --doc
         cargo test -p ops-lib --test acceptance
         cargo test -p ops-lib --test security
-        cargo test -p ops-lib --test performance -- --nocapture
+        & mask --maskfile $maskfile test --profile performance; if ($LASTEXITCODE) { exit $LASTEXITCODE }
         & mask --maskfile $maskfile test --profile features; if ($LASTEXITCODE) { exit $LASTEXITCODE }
     }
 }
