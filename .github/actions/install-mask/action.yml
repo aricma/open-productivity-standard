@@ -1,0 +1,40 @@
+name: Install mask
+description: Put the pinned mask binary on PATH.
+
+# The release is a zip per platform, and unpacking one is the only place a
+# runner has to differ: `unzip` with a POSIX path on Unix, `Expand-Archive`
+# with a Windows path on Windows. Nothing about the repo's own behaviour is
+# decided here.
+runs:
+  using: composite
+  steps:
+    - name: Install mask (Unix)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        set -eu
+        version=0.11.7
+        case "$RUNNER_OS" in
+        Linux) target=x86_64-unknown-linux-musl ;;
+        macOS)
+          if [ "$(uname -m)" = arm64 ]; then target=aarch64-apple-darwin; else target=x86_64-apple-darwin; fi
+          ;;
+        *) echo "no mask build for $RUNNER_OS" >&2; exit 1 ;;
+        esac
+        base="https://github.com/jacobdeichert/mask/releases/download/mask/$version/mask-$version-$target"
+        curl -fsSL "$base.zip" -o mask.zip
+        # The zip holds the binary in a directory named after the asset.
+        unzip -q -o mask.zip -d "$RUNNER_TEMP"
+        chmod +x "$RUNNER_TEMP/mask-$version-$target/mask"
+        echo "$RUNNER_TEMP/mask-$version-$target" >> "$GITHUB_PATH"
+    - name: Install mask (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = "Stop"
+        $version = "0.11.7"
+        $target = "x86_64-pc-windows-msvc"
+        $base = "https://github.com/jacobdeichert/mask/releases/download/mask/$version/mask-$version-$target"
+        Invoke-WebRequest -Uri "$base.zip" -OutFile "$env:RUNNER_TEMP\mask.zip"
+        Expand-Archive -Path "$env:RUNNER_TEMP\mask.zip" -DestinationPath $env:RUNNER_TEMP -Force
+        Join-Path $env:RUNNER_TEMP "mask-$version-$target" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8

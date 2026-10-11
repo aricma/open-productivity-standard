@@ -7,8 +7,65 @@ on:
     branches: [main]
 
 jobs:
-  lib:
-    name: ops-lib (${{ matrix.os }})
+  ci:
+    name: Everything else (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      # `mask build` scans dependencies, so this job needs the scanners.
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit,cargo-deny
+      - uses: ./.github/actions/install-mask
+      # The gate is the mask tasks a developer runs, one command per step, on
+      # the platform's own shell: a step with no `shell` gets bash on Linux and
+      # macOS and PowerShell on Windows, and mask then runs the block compiled
+      # for that platform. That is also why the gate is here and not in a
+      # reusable action: a composite action must name a literal shell, so it
+      # cannot give each platform its own.
+      - name: Show the tools the tasks need
+        run: mask setup
+      # `mask ci` regenerates the corpus rather than checking it.
+      - name: Corpus is up to date
+        run: mask gen-corpus --check
+      - name: Format
+        run: mask format
+      # Lint, docs, the dependency scans, the rlib size budget, and one build
+      # per format on its own.
+      - name: Build
+        run: mask build
+      # One step per test profile, so a failure says which suite it was. The
+      # timing tripwire has its own job, on the one runner whose spec is fixed.
+      - name: Essential tests
+        run: mask test --profile essential
+      - name: Corpus tests
+        run: mask test --profile acceptance
+      - name: Security tests
+        run: mask test --profile security
+      - name: Each format on its own
+        run: mask test --profile features
+
+  performance:
+    name: Performance (ubuntu-slim)
+    # The one GitHub runner with a fixed, smallest spec: 1 CPU, 5 GB. It is a
+    # container on a shared VM, not a whole one, and there is no way to ask for
+    # other CPU or RAM numbers — a label is the only handle.
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: ./.github/actions/install-mask
+      # The mask task runs here exactly as it does locally, and its profile pins
+      # the test harness to one thread, so the machine's core count cannot enter
+      # the measurement. The log prints the envelope it ran in.
+      - name: Run the tripwire under the CI envelope
+        run: mask test --profile performance
+
+  acceptance:
+    name: Acceptance corpus (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -16,7 +73,14 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/ci
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: ./.github/actions/install-mask
+      # The corpus is the portable suite: it has to hold on every OS, and it is
+      # all that runs on all of them. The rest of the suite tests the library
+      # rather than the platform, so it runs once, in the Linux job below. No
+      # scanners or linters are installed here: this job runs neither.
+      - name: Run the corpus
+        run: mask test --profile acceptance
 
   audit:
     name: Security Check
