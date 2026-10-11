@@ -6,5 +6,7 @@ publish = false
 license = "MIT"
 description = "Generate ops/tests/acceptance from specs/<version>/tests"
 
+[lints]
+workspace = true
+
 [dependencies]
-ops-lib = { path = "../../ops" }

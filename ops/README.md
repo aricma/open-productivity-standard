@@ -39,6 +39,7 @@ This crate is one half of the OPS monorepo; the standard lives in
 ```
 ops/
 ├── Cargo.toml           the crate manifest
+├── formats.txt          the formats this crate claims, and its Rust path
 ├── lib/                 the library (source only)
 │   ├── lib.rs           crate root: the versioned public surface
 │   ├── shared/          helpers shared by every spec version

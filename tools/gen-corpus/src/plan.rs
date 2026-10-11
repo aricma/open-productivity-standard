@@ -8,6 +8,7 @@ use crate::case::Group;
 use crate::constants;
 use crate::corpus::{self, directory_name, subdirectories};
 use crate::emission;
+use crate::formats::Implementation;
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::fs;
@@ -15,11 +16,12 @@ use std::path::{Path, PathBuf};
 
 /// Every file to generate, as `(path relative to the output root, contents)`.
 pub(crate) fn generated_files(root: &Path, out: &Path) -> Vec<(String, String)> {
+    let implementation = Implementation::read(&root.join(constants::IMPLEMENTATION_FILE));
     let versions = corpus_versions(root);
     let mut files = Vec::new();
     let mut main = String::from(constants::ACCEPTANCE_HEADER);
     for version in &versions {
-        files.extend(version_files(root, out, version));
+        files.extend(version_files(root, out, version, &implementation));
         writeln!(main, "mod {version};").unwrap();
     }
     files.insert(0, ("main.rs".to_string(), main));
@@ -58,8 +60,13 @@ pub(crate) fn repository_root() -> PathBuf {
 
 /// One version's files: a module per format, one per kind inside it, plus the
 /// cross-format `transform`, and the version module that lists them.
-fn version_files(root: &Path, out: &Path, version: &str) -> Vec<(String, String)> {
-    let cases = corpus::read_cases(root, version);
+fn version_files(
+    root: &Path,
+    out: &Path,
+    version: &str,
+    implementation: &Implementation,
+) -> Vec<(String, String)> {
+    let cases = corpus::read_cases(root, version, implementation);
     let mut files = Vec::new();
     let mut modules: BTreeSet<String> = BTreeSet::new();
 
@@ -90,7 +97,13 @@ fn version_files(root: &Path, out: &Path, version: &str) -> Vec<(String, String)
                 group.dir()
             );
             let mut content = emission::file_header(&summary);
-            content.push_str(&emission::render_tests(root, out, &file, &group_cases));
+            content.push_str(&emission::render_tests(
+                root,
+                out,
+                &file,
+                &group_cases,
+                implementation,
+            ));
             files.push((file, content));
             kinds.insert(group.dir().to_string());
         }
@@ -109,7 +122,13 @@ fn version_files(root: &Path, out: &Path, version: &str) -> Vec<(String, String)
         let file = format!("{version}/transform.rs");
         let summary = format!("One `#[test]` per `specs/{version}/tests/transform/` case.");
         let mut content = emission::file_header(&summary);
-        content.push_str(&emission::render_tests(root, out, &file, &transforms));
+        content.push_str(&emission::render_tests(
+            root,
+            out,
+            &file,
+            &transforms,
+            implementation,
+        ));
         files.push((file, content));
         modules.insert(Group::Transform.dir().to_string());
     }

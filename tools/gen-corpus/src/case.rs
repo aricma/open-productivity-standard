@@ -1,6 +1,6 @@
 //! What a case is: one corpus directory, and what it asserts.
 
-use crate::formats;
+use crate::formats::Implementation;
 
 /// The kinds of case a format directory holds. Every kind but `Transform` lives
 /// inside one format; `Transform` crosses formats and sits at the top.
@@ -83,12 +83,15 @@ impl Case {
 
     /// The source paths this case reads from and writes to, as
     /// `ops_lib::v0::Format::…`. The write is absent when the case only reads.
-    pub(crate) fn format_paths(&self) -> (Option<String>, Option<String>) {
-        let reads = formats::variant_path(&self.version, &self.given_ext);
+    pub(crate) fn format_paths(
+        &self,
+        implementation: &Implementation,
+    ) -> (Option<String>, Option<String>) {
+        let reads = implementation.variant_path(&self.version, &self.given_ext);
         let writes = self
             .target_ext
             .as_deref()
-            .and_then(|target| formats::variant_path(&self.version, target));
+            .and_then(|target| implementation.variant_path(&self.version, target));
         (reads, writes)
     }
 
@@ -125,6 +128,12 @@ mod tests {
     #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
     use super::*;
+    use std::path::Path;
+
+    /// What the repository's implementation declares.
+    fn implementation() -> Implementation {
+        Implementation::read(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../../ops/formats.txt"))
+    }
 
     fn case(
         group: Group,
@@ -156,7 +165,7 @@ mod tests {
     fn a_case_names_the_formats_it_reads_and_writes() {
         let reads_only = case(Group::Valid, Some("json"), "json", None, None);
         assert_eq!(
-            reads_only.format_paths(),
+            reads_only.format_paths(&implementation()),
             (Some("ops_lib::v0::Format::Json".to_string()), None)
         );
 
@@ -168,7 +177,7 @@ mod tests {
             Some("json"),
         );
         assert_eq!(
-            roundtrip.format_paths(),
+            roundtrip.format_paths(&implementation()),
             (
                 Some("ops_lib::v0::Format::Json".to_string()),
                 Some("ops_lib::v0::Format::Json".to_string())
@@ -178,7 +187,7 @@ mod tests {
         // A transform writes the target, not the format it read.
         let transform = case(Group::Transform, None, "json", Some("yaml"), Some("yaml"));
         assert_eq!(
-            transform.format_paths(),
+            transform.format_paths(&implementation()),
             (
                 Some("ops_lib::v0::Format::Json".to_string()),
                 Some("ops_lib::v0::Format::Yaml".to_string())

@@ -6,13 +6,13 @@
 
 use crate::case::{Case, Group};
 use crate::constants;
-use crate::formats;
+use crate::formats::Implementation;
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 /// Every case under one version's `tests/` directory.
-pub(crate) fn read_cases(root: &Path, version: &str) -> Vec<Case> {
+pub(crate) fn read_cases(root: &Path, version: &str, implementation: &Implementation) -> Vec<Case> {
     let tests = root
         .join(constants::SPECS_DIR)
         .join(version)
@@ -52,7 +52,7 @@ pub(crate) fn read_cases(root: &Path, version: &str) -> Vec<Case> {
         tests.display()
     );
     for case in &cases {
-        check_case_formats(version, case, &formats);
+        check_case_formats(case, &formats, implementation);
     }
     cases
 }
@@ -221,7 +221,7 @@ fn check_only_known_kinds(root: &Path, format_dir: &Path, kinds: &[&str]) {
 /// Fails unless a case's files are the formats the case says it is about: the
 /// format it is filed under, or — for a conversion, which is filed at the top —
 /// the two its name names.
-fn check_case_formats(version: &str, case: &Case, formats: &BTreeSet<String>) {
+fn check_case_formats(case: &Case, formats: &BTreeSet<String>, implementation: &Implementation) {
     let Some(format) = &case.format else {
         let (from, to) = transform_direction(&case.name);
         let given_file = format!("{}{}", constants::GIVEN_PREFIX, case.given_ext);
@@ -233,14 +233,14 @@ fn check_case_formats(version: &str, case: &Case, formats: &BTreeSet<String>) {
             );
         }
         assert!(
-            formats::same(version, &from, &case.given_ext),
+            implementation.same(&from, &case.given_ext),
             "{}: `{given_file}` is not {from}",
             case.corpus_path()
         );
         if let Some((ext, _)) = &case.expectation {
             let expectation_file = format!("{}{ext}", constants::EXPECTATION_PREFIX);
             assert!(
-                formats::same(version, &to, ext),
+                implementation.same(&to, ext),
                 "{}: `{expectation_file}` is not {to}",
                 case.corpus_path()
             );
@@ -250,14 +250,14 @@ fn check_case_formats(version: &str, case: &Case, formats: &BTreeSet<String>) {
 
     let given_file = format!("{}{}", constants::GIVEN_PREFIX, case.given_ext);
     assert!(
-        formats::same(version, format, &case.given_ext),
+        implementation.same(format, &case.given_ext),
         "{}: `{given_file}` is not {format}",
         case.corpus_path()
     );
     if let Some((ext, _)) = &case.expectation {
         let expectation_file = format!("{}{ext}", constants::EXPECTATION_PREFIX);
         assert!(
-            formats::same(version, format, ext),
+            implementation.same(format, ext),
             "{}: `{expectation_file}` is not {format}",
             case.corpus_path()
         );
@@ -309,6 +309,11 @@ mod tests {
 
     use super::*;
 
+    /// What the repository's implementation declares.
+    fn implementation() -> Implementation {
+        Implementation::read(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../../ops/formats.txt"))
+    }
+
     /// A scratch version tree: one documented format, plus whatever else the
     /// test files. Returns the root the generator would be pointed at.
     fn scratch(name: &str, files: &[(&str, &str)]) -> PathBuf {
@@ -344,7 +349,7 @@ mod tests {
                 ("specs/v0/tests/invalid/json/ok/given.json", "{}"),
             ],
         );
-        read_cases(&root, "v0");
+        read_cases(&root, "v0", &implementation());
     }
 
     /// The same for a case in the right format but the wrong kind.
@@ -361,7 +366,7 @@ mod tests {
                 ("specs/v0/tests/json/roundtrips/ok/given.json", "{}"),
             ],
         );
-        read_cases(&root, "v0");
+        read_cases(&root, "v0", &implementation());
     }
 
     /// An `invalid` case is a document its own format's reader rejects, so a
@@ -378,7 +383,7 @@ mod tests {
                 ("specs/v0/tests/json/invalid/ok/given.yaml", "title: t\n"),
             ],
         );
-        read_cases(&root, "v0");
+        read_cases(&root, "v0", &implementation());
     }
 
     /// A conversion's name says which formats it converts between, and that has
@@ -393,7 +398,7 @@ mod tests {
         ));
         files.push(("specs/v0/tests/transform/yaml-to-jsonl/given.json", "{}"));
         let root = scratch("direction", &files);
-        read_cases(&root, "v0");
+        read_cases(&root, "v0", &implementation());
     }
 
     /// A conversion with nothing to compare against is a conversion that must
@@ -407,7 +412,7 @@ mod tests {
         ));
         files.push(("specs/v0/tests/transform/json-to-jsonl/given.json", "{}"));
         let root = scratch("target", &files);
-        let cases = read_cases(&root, "v0");
+        let cases = read_cases(&root, "v0", &implementation());
         assert_eq!(cases.len(), 1);
         assert_eq!(cases[0].target_ext.as_deref(), Some("jsonl"));
         assert!(cases[0].must_fail());
@@ -421,6 +426,6 @@ mod tests {
         files.push(("specs/v0/tests/transform/json-tojsonl/claim.txt", "cannot."));
         files.push(("specs/v0/tests/transform/json-tojsonl/given.json", "{}"));
         let root = scratch("malformed", &files);
-        read_cases(&root, "v0");
+        read_cases(&root, "v0", &implementation());
     }
 }

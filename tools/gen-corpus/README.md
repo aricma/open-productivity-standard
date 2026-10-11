@@ -36,6 +36,8 @@ run.
 
 - The generated tests are committed and reviewed like any other code. Do
   not edit them by hand — change the corpus and regenerate.
-- Which formats are supported comes from `ops-lib`'s `Format` enum, so the
-  generator and the crate cannot disagree: a format `ops-lib` stops
-  claiming turns into `#[ignore]`d tests on the next run.
+- Which formats are claimed is read from `ops/formats.txt`, the crate's own
+  declaration, rather than imported from it: a tool about the standard's corpus
+  should not depend on one implementation of it. The library's own tests check
+  that the declaration matches `Format` exactly, so the two cannot disagree —
+  a format added to one and not the other fails the gate.

@@ -27,6 +27,10 @@ pub(crate) const GIVEN_PREFIX: &str = "given.";
 /// A round-trip or transform case's expected output is `expectation.<ext>`.
 pub(crate) const EXPECTATION_PREFIX: &str = "expectation.";
 
+/// Where the implementation writes down what it claims. Read instead of
+/// importing the crate, so this tool does not depend on an implementation.
+pub(crate) const IMPLEMENTATION_FILE: &str = "ops/formats.txt";
+
 /// The generated tests live here, relative to the repository root. Mirrors the
 /// `[[test]]` entry in `ops/Cargo.toml` and the profile the mask runs.
 pub(crate) const ACCEPTANCE_DIR: &str = "ops/tests/acceptance";

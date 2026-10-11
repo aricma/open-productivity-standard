@@ -1,0 +1,22 @@
+# The OPS formats this implementation claims.
+#
+# The corpus generator reads this file instead of importing the crate, so that a
+# tool about the standard's corpus does not depend on one implementation of it.
+# That makes this file the only place the claim is written down twice — here for
+# the generator, and in `Format` for the crate — so `tests/essentials` checks
+# that the two agree, and a format added to one and not the other fails the gate.
+#
+# One line per format:
+#
+#   <the name the standard documents> <the Format variant> [<file extension>]
+#
+# The extension is only needed when it differs from the format's name, which is
+# how a future Markdown profile would read `given.md` while being documented as
+# `formats/markdown.md`:
+#
+#   markdown Markdown md
+crate ops_lib
+json Json
+yaml Yaml
+jsonl Jsonl
+csv Csv

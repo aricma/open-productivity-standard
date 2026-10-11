@@ -6,7 +6,7 @@
 
 use crate::case::{Case, Group, test_name};
 use crate::constants;
-use crate::formats::{self, Unsupported};
+use crate::formats::{Implementation, Unsupported};
 use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::path::Path;
@@ -16,7 +16,13 @@ use std::path::Path;
 /// A case whose format this implementation does not claim becomes an
 /// `#[ignore]`d test, so a skip stays visible and counted instead of silently
 /// absent.
-pub(crate) fn render_tests(root: &Path, out: &Path, file: &str, cases: &[&Case]) -> String {
+pub(crate) fn render_tests(
+    root: &Path,
+    out: &Path,
+    file: &str,
+    cases: &[&Case],
+    implementation: &Implementation,
+) -> String {
     let reason = constants::UNSUPPORTED_REASON;
     let mut names: HashMap<String, usize> = HashMap::new();
     let mut tests = String::new();
@@ -31,7 +37,7 @@ pub(crate) fn render_tests(root: &Path, out: &Path, file: &str, cases: &[&Case])
         } else {
             format!("{base}_{seen}")
         };
-        match case_body(root, out, file, case) {
+        match case_body(root, out, file, case, implementation) {
             Ok(body) => {
                 writeln!(
                     tests,
@@ -65,15 +71,16 @@ pub(crate) fn case_body(
     out: &Path,
     file: &str,
     case: &Case,
+    implementation: &Implementation,
 ) -> Result<String, Unsupported> {
     if let Some(missing) = case
         .format_names()
         .into_iter()
-        .find(|name| formats::variant_name(&case.version, name).is_none())
+        .find(|name| !implementation.claims(name))
     {
         return Err(Unsupported(missing.to_string()));
     }
-    let (reads, writes) = case.format_paths();
+    let (reads, writes) = case.format_paths(implementation);
     let reads = reads.expect("checked above");
     let api = format!("ops_lib::{}", case.version);
     Ok(render_body(
@@ -184,6 +191,11 @@ mod tests {
 
     use super::*;
 
+    /// What the repository's implementation declares.
+    fn implementation() -> Implementation {
+        Implementation::read(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../../ops/formats.txt"))
+    }
+
     fn case(
         group: Group,
         format: Option<&str>,
@@ -213,7 +225,8 @@ mod tests {
     /// the conversion that cannot be done, which no corpus case reaches while
     /// the format it needs is unclaimed.
     fn body(case: &Case, writes: Option<&str>) -> String {
-        let reads = formats::variant_path(&case.version, &case.given_ext)
+        let reads = implementation()
+            .variant_path(&case.version, &case.given_ext)
             .expect("these test cases are in a claimed format");
         render_body(case, "../", "ops_lib::v0", &reads, writes)
     }
@@ -304,16 +317,28 @@ mod tests {
         let out = root.join(constants::ACCEPTANCE_DIR);
         let markdown = case(Group::Valid, Some("markdown"), "md", None, None);
         assert_eq!(
-            case_body(root, &out, "v0/markdown/valid.rs", &markdown)
-                .unwrap_err()
-                .0,
+            case_body(
+                root,
+                &out,
+                "v0/markdown/valid.rs",
+                &markdown,
+                &implementation()
+            )
+            .unwrap_err()
+            .0,
             "md"
         );
         let impossible = case(Group::Transform, None, "json", Some("markdown"), None);
         assert_eq!(
-            case_body(root, &out, "v0/transform.rs", &impossible)
-                .unwrap_err()
-                .0,
+            case_body(
+                root,
+                &out,
+                "v0/transform.rs",
+                &impossible,
+                &implementation()
+            )
+            .unwrap_err()
+            .0,
             "markdown"
         );
     }
@@ -328,6 +353,7 @@ mod tests {
             Path::new("/repo"),
             "f.rs",
             &[&one, &two],
+            &implementation(),
         );
         assert_eq!(tests.matches("fn case()").count(), 1, "{tests}");
         assert_eq!(tests.matches("fn case_2()").count(), 1, "{tests}");
