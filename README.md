@@ -6,11 +6,11 @@
 ## Mission
 
 Your tasks should live wherever you work best — and move when you do.
-OPS is one open task structure that any productivity tool can export and
-import, so your work travels between tools without losing title,
-status, notes, or hierarchy. Any tool that reads or writes OPS can
-exchange tasks with any other: unknown details ride along in
-`metadata` instead of being dropped, so every export stays lossless.
+OPS is one open task structure: a task is a title, a status, and as much
+else as your tool wants to carry, nested as deep as your work goes. A tool
+writes it out in one of the defined formats, and a tool that reads that
+format gets the same tasks back — title, status, notes, hierarchy, and
+every detail in `metadata`, kept verbatim instead of dropped.
 
 ```text
 [ Notion ]  ──┐                         ┌──> [ Linear ]
@@ -20,9 +20,9 @@ exchange tasks with any other: unknown details ride along in
 
 OPS has three goals:
 
-- **Interoperability** — one open task structure any tool can export and
-  import. Tasks travel between tools without losing title, status,
-  notes, or hierarchy.
+- **Interoperability** — one open task structure that any tool can export
+  and import in a shared format. Tasks travel between tools without losing
+  title, status, notes, or hierarchy.
 - **Abstraction** — APIs, automations, and analysis written once against
   the OPS shape work across every OPS-capable tool.
 - **Ownership** — your data stays yours. Unknown details ride along in
