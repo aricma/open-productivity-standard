@@ -264,7 +264,11 @@ esac
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 $env:PATH = "$env:MASKFILE_DIR\tmp\bin;$env:PATH"
-& $env:MASK gen-corpus; if ($LASTEXITCODE) { exit $LASTEXITCODE }
+# See the sh block: regenerate the corpus first. $env:MASK is the string
+# "mask --maskfile <path>", which PowerShell cannot invoke as a command, so
+# call the parts instead.
+$maskfile = $env:MASK -replace '^mask --maskfile ', ''
+& mask --maskfile $maskfile gen-corpus; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 if (-not $profile) { $profile = "essential" }
 switch ($profile) {
     "essential" {
@@ -289,7 +293,7 @@ switch ($profile) {
         cargo test -p ops-lib --test acceptance
         cargo test -p ops-lib --test security
         cargo test -p ops-lib --test performance -- --nocapture
-        & $env:MASK test --profile features; if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        & mask --maskfile $maskfile test --profile features; if ($LASTEXITCODE) { exit $LASTEXITCODE }
     }
 }
 ```
@@ -318,11 +322,14 @@ $MASK format $fix_arg && $MASK build $fix_arg && $MASK test --profile "${test_pr
 ```
 
 ```powershell
+# $env:MASK is the string "mask --maskfile <path>", which PowerShell cannot
+# invoke as a command, so call the parts instead.
+$maskfile = $env:MASK -replace '^mask --maskfile ', ''
 $selected = if ($test_profile) { $test_profile } else { "all" }
 $fixArg = if ($fix) { @("--fix") } else { @() }
-& $env:MASK format @fixArg; if ($LASTEXITCODE) { exit $LASTEXITCODE }
-& $env:MASK build @fixArg; if ($LASTEXITCODE) { exit $LASTEXITCODE }
-& $env:MASK test --profile $selected; if ($LASTEXITCODE) { exit $LASTEXITCODE }
+& mask --maskfile $maskfile format @fixArg; if ($LASTEXITCODE) { exit $LASTEXITCODE }
+& mask --maskfile $maskfile build @fixArg; if ($LASTEXITCODE) { exit $LASTEXITCODE }
+& mask --maskfile $maskfile test --profile $selected; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 ```
 
 ## release
