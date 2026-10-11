@@ -29,7 +29,9 @@ leading `---` block that is not a mapping is ordinary content.
 
 Any other line in a task's scope is a note on that task; `- key: value`
 with a valid metadata key is metadata — the value is the text after the
-colon, so a value read from Markdown is a string. (RFC-015) A value with a
+colon, so a value read from Markdown is a string, and a bullet with nothing
+after the colon carries nothing, so the key is absent. (RFC-015) A key
+written twice on a task is invalid. A value with a
 line break is written on one line, double-quoted with the break escaped
 (`\n`, JSON-style), and a reader decodes the escapes back to the real
 characters. Content before the first task is not part of the document.

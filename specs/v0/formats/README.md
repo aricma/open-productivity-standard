@@ -5,11 +5,14 @@ is a mapping of that model onto a concrete syntax — JSON, YAML, JSONL, CSV,
 Markdown, or any other.
 
 A format document is **normative**: claiming a format binds a tool to its
-rules. That is what makes exports reproducible — read, write, and read
-again has to come back to the same model, and two tools that claim the same
-format have to agree on the bytes. Nothing requires a tool to claim any
-format, and this list is not closed: any mapping that stays lossless and
-unambiguous is welcome.
+rules. That is what makes exports reproducible — read, write, and read again
+has to come back to the same model, and reading your own output and writing it
+again has to change nothing. The standard fixes the model and the mapping, not
+the layout: key order, indentation, quoting, and a trailing newline are each
+implementation's own, so two tools may lay the same model out differently and
+both conform (see [the corpus](../tests/README.md), RFC-031). Nothing requires
+a tool to claim any format, and this list is not closed: any mapping that
+stays lossless and unambiguous is welcome.
 
 Formats fall into two families, and the use case decides which to pick:
 

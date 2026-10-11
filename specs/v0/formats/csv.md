@@ -32,20 +32,28 @@ twice. (RFC-014)
 
 Cell values:
 
-- A prefixed column with a type suffix is read as that type. If the cell
-  cannot be read as it, it is kept as a string — reading never fails.
-- Otherwise, a cell that parses as JSON is read as that JSON value, and
-  any other cell is kept as a string. So `3` is a number, `true` is a
-  boolean, `["a","b"]` is a list, and `2026-07-01` is a string.
-- An empty cell means the key is absent, not an empty value.
+- A **reserved column** holds its field as a string, except `subtasks`,
+  which is a JSON array, and `metadata`, which is a JSON object. A field
+  whose cell is `null` is absent, like an empty cell.
+- A **metadata column** cell with a type suffix is read as that type. If
+  the cell cannot be read as it, it is kept as a string — reading never
+  fails.
+- Otherwise, a metadata cell that parses as JSON is read as that JSON
+  value, and any other cell is kept as a string. So `3` is a number,
+  `true` is a boolean, `["a","b"]` is a list, and `2026-07-01` is a
+  string.
+- An empty cell means the field or the key is absent, not an empty value.
+  A value that carries nothing is absent in every format (see the
+  [model](../model.md)).
 
 The `metadata` column and the metadata columns are merged; a metadata
 column that repeats a key already in the `metadata` object is invalid, a
 duplicate. Any non-reserved column is metadata, so an unexpected column
 adds data instead of failing the read — but a row is **no wider than the
 header**: extra cells have no column to belong to, and would be read as
-nothing, so a wider row is invalid. A row without `title` or `status`
-is invalid.
+nothing, so a wider row is invalid. A row may be *shorter* than the header:
+every cell it does not have is absent. A blank line between rows is skipped.
+A row without `title` or `status` is invalid.
 `subtasks` is a JSON array of child ids, as in JSONL, and roots carry no
 id — so **every subtask needs one**: the column has nothing else to carry the
 hierarchy with, and a writer that cannot name a subtask must refuse the model

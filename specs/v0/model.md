@@ -109,6 +109,14 @@ optional, and a tool that has nothing to put in a field leaves it out.
 `yes*` means required under conditions: a format that references tasks by
 id needs one.
 
+A field that carries nothing is absent, not empty. `id`, `notes`, and
+`version` written as `null` or as an empty string say nothing about the task,
+so a reader leaves them out of the model and a writer leaves them out of the
+document — the rule RFC-027 makes for `metadata`, applied to the fields that
+can hold nothing. A `metadata` value that carries nothing is absent the same
+way (rule 6). `title` is the exception: it is required, and an empty title
+explains nothing, so it is invalid rather than absent (rule 11).
+
 ### Rules
 
 A document that breaks one of these rules is invalid, and a reader must

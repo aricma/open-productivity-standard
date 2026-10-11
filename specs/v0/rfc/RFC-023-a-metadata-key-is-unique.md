@@ -17,5 +17,6 @@ A metadata key is unique within a task.
 
 ## Consequences
 
-A lookup returns one value or none. How a format resolves a repeated key
-is left to the parser of that format.
+A lookup returns one value or none. How a repeated key in a document
+resolves is the enclosing format's business, and each format document says
+what its syntax does with one.

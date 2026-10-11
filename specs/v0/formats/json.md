@@ -13,4 +13,6 @@ written as.
 needs one. `version` appears on a root object, and every declaration in a
 document must agree (see [About the version](../model.md#about-the-version)).
 An unknown field makes the document invalid — a new concept arrives in
-`metadata`, not as a new field.
+`metadata`, not as a new field. An object that repeats a key resolves to its
+last occurrence: JSON permits the repeat, and a task carries one value per key
+(RFC-023).

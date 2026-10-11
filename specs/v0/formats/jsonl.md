@@ -13,4 +13,5 @@ A reader rebuilds the forest by resolving those ids: a record that no other
 record references is a root. It rejects a duplicate id, a reference to an id
 that does not exist, a child with more than one parent, and a cycle.
 `version` appears on root records, and every declaration in a document must
-agree (see [About the version](../model.md#about-the-version)).
+agree (see [About the version](../model.md#about-the-version)). As in JSON, an
+object that repeats a key resolves to its last occurrence.
