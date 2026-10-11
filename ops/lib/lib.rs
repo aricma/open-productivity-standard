@@ -25,6 +25,4 @@
 
 pub mod v0;
 
-pub use v0::detect_version;
-
 mod shared;

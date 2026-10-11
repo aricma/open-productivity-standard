@@ -56,7 +56,7 @@ impl Metadata {
         self.0.insert(key, value)
     }
 
-    pub fn retain(&mut self, keep: impl FnMut(&String, &mut MetadataValue) -> bool) {
+    pub(crate) fn retain(&mut self, keep: impl FnMut(&String, &mut MetadataValue) -> bool) {
         self.0.retain(keep);
     }
 

@@ -1,9 +1,8 @@
 use crate::v0::model::status::Status;
 use crate::v0::model::value::Metadata;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize)]
 pub struct Task {
     pub title: String,
     pub status: Status,

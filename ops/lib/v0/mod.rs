@@ -61,7 +61,9 @@ pub fn read(format: Format, input: &str) -> Result<Vec<Task>, Error> {
 }
 
 /// The version this document declares, or `None` when it declares none.
-/// Version-agnostic: it never calls a version module.
+///
+/// A syntax-level probe: it reports what the document claims, matching no
+/// declaration against what this library implements.
 pub fn detect_version(format: Format, input: &str) -> Result<Option<String>, Error> {
     detect::detect_version(format, input)
 }
