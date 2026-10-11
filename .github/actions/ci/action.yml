@@ -29,8 +29,16 @@ runs:
       run: cargo check --all-targets --all-features
     - shell: bash
       run: cargo clippy --all-targets --all-features -- -D warnings
+    # Every target but `performance`: the timing tripwire needs a quiet
+    # machine, and a shared runner is not one. It runs in `mask ci` and
+    # `mask test --profile performance`.
     - shell: bash
-      run: cargo test --all-targets --all-features
+      run: |
+        cargo test --lib --test essentials
+        cargo test -p gen-corpus
+        cargo test --doc
+        cargo test -p ops-lib --test acceptance
+        cargo test -p ops-lib --test security
     - shell: bash
       run: cargo doc --no-deps --all-features
       env:
