@@ -53,7 +53,7 @@ fn yaml_version(input: &str) -> Result<Option<String>, Error> {
 fn jsonl_version(input: &str) -> Result<Option<String>, Error> {
     for line in input.lines().filter(|l| !l.trim().is_empty()) {
         let value: serde_json::Value =
-            serde_json::from_str(line).map_err(|e| Error::syntax(Format::Json, e.to_string()))?;
+            serde_json::from_str(line).map_err(|e| Error::syntax(Format::Jsonl, e.to_string()))?;
         if let Some(version) = value_version(&value) {
             return Ok(Some(version));
         }
@@ -116,6 +116,26 @@ mod tests {
             detect_version(Format::Csv, "title,status,version\na,open,0\n").unwrap(),
             Some("0".to_string())
         );
+    }
+
+    /// The probe parses the format it was asked about, so a failure names that
+    /// format and not whichever one shares its syntax.
+    #[test]
+    fn a_probe_reports_the_format_it_was_asked_about() {
+        for (format, input) in [
+            (Format::Json, "{"),
+            (Format::Yaml, "a: [1"),
+            (Format::Jsonl, "not json"),
+            (Format::Csv, "\"x"),
+        ] {
+            let err = detect_version(format, input).unwrap_err();
+            assert!(
+                err.to_string()
+                    .starts_with(&format!("invalid {}:", format.display_name())),
+                "{:?}: {err}",
+                format
+            );
+        }
     }
 
     #[test]
