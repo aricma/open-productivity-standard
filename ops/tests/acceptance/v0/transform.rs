@@ -327,3 +327,23 @@ fn yaml_to_jsonl() {
         "specs/v0/tests/transform/yaml-to-jsonl: A nested YAML document must convert to flat JSONL without loss. (the exported model differs from the expectation)"
     );
 }
+
+#[rustfmt::skip]
+#[test]
+#[ignore = "unsupported format: md"]
+fn json_to_markdown_line_break() {}
+
+#[rustfmt::skip]
+#[test]
+#[ignore = "unsupported format: markdown"]
+fn json_to_markdown_notes_with_an_h1() {}
+
+#[rustfmt::skip]
+#[test]
+#[ignore = "unsupported format: md"]
+fn markdown_to_json_key_outside_charset_is_a_note() {}
+
+#[rustfmt::skip]
+#[test]
+#[ignore = "unsupported format: md"]
+fn markdown_to_json_line_break() {}

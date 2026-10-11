@@ -3,5 +3,6 @@
 mod csv;
 mod json;
 mod jsonl;
+mod markdown;
 mod transform;
 mod yaml;

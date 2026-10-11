@@ -6,9 +6,8 @@
 //! `invalid/`, `roundtrip/`. `transform/` is the one kind that crosses formats.
 //! The test name is the case directory name.
 //!
-//! Formats the reference implementation does not claim are not generated: not
-//! claiming a format is a statement about the implementation, so there is
-//! nothing to test. The version module names what was left out.
+//! Formats the reference implementation does not claim become `#[ignore]`d
+//! tests, so skips stay visible and counted.
 //!
 //! ```text
 //! cargo run -p gen-corpus             regenerate, removing stale files

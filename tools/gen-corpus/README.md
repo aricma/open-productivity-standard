@@ -15,9 +15,8 @@ mirrors the corpus layout.
 - Names each test after its case directory, snake_cased. The case already
   carries a `claim.txt`; the generator copies it into the test's failure
   message.
-- Leaves out a case whose format the crate does not claim, and names what it
-  left out once in the version module. Not claiming a format is a statement
-  about the implementation, not a skip.
+- Emits `#[ignore]` for a case whose format the crate does not claim, so
+  skips stay visible and counted.
 - Owns `ops/tests/acceptance/`: it writes every file it lists and removes
   any other `.rs` in that directory.
 

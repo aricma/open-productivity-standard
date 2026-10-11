@@ -5,17 +5,17 @@
 //! source paths it needs, it returns text.
 
 use crate::case::{Case, Group, test_name};
-use crate::formats::Implementation;
+use crate::constants;
+use crate::formats::{Implementation, Unsupported};
 use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::path::Path;
 
 /// The `#[test]` blocks for one module's cases, ending with a trailing newline.
 ///
-/// A case whose format this implementation does not claim is left out. Not
-/// claiming a format is a statement about the implementation, not a skip: a
-/// placeholder test would only repeat it once per case. The version module
-/// names what was left out, so the omission is still visible in the tree.
+/// A case whose format this implementation does not claim becomes an
+/// `#[ignore]`d test, so a skip stays visible and counted instead of silently
+/// absent.
 pub(crate) fn render_tests(
     root: &Path,
     out: &Path,
@@ -23,13 +23,12 @@ pub(crate) fn render_tests(
     cases: &[&Case],
     implementation: &Implementation,
 ) -> String {
+    let reason = constants::UNSUPPORTED_REASON;
     let mut names: HashMap<String, usize> = HashMap::new();
     let mut tests = String::new();
+    let mut ignored = Vec::new();
 
     for case in cases {
-        if !case.is_claimed_by(implementation) {
-            continue;
-        }
         let base = test_name(&case.name);
         let seen = names.entry(base.clone()).or_insert(0);
         *seen += 1;
@@ -38,10 +37,21 @@ pub(crate) fn render_tests(
         } else {
             format!("{base}_{seen}")
         };
-        let body = case_body(root, out, file, case, implementation);
+        match case_body(root, out, file, case, implementation) {
+            Ok(body) => {
+                writeln!(
+                    tests,
+                    "#[rustfmt::skip]\n#[test]\nfn {name}() {{\n{body}}}\n"
+                )
+                .unwrap();
+            }
+            Err(Unsupported(format)) => ignored.push((name, format)),
+        }
+    }
+    for (name, format) in ignored {
         writeln!(
             tests,
-            "#[rustfmt::skip]\n#[test]\nfn {name}() {{\n{body}}}\n"
+            "#[rustfmt::skip]\n#[test]\n#[ignore = \"{reason} {format}\"]\nfn {name}() {{}}\n"
         )
         .unwrap();
     }
@@ -51,25 +61,35 @@ pub(crate) fn render_tests(
     tests
 }
 
-/// One case's test body. The caller has checked that the implementation claims
-/// every format the case needs, which is what makes the paths below exist.
+/// One case's test body, or the format this implementation does not claim.
+///
+/// The support check lives here, and the rendering below it, so that every
+/// shape is exercised by a test — including the writer-reject one that no
+/// claimed format reaches today.
 pub(crate) fn case_body(
     root: &Path,
     out: &Path,
     file: &str,
     case: &Case,
     implementation: &Implementation,
-) -> String {
+) -> Result<String, Unsupported> {
+    if let Some(missing) = case
+        .format_names()
+        .into_iter()
+        .find(|name| !implementation.claims(name))
+    {
+        return Err(Unsupported(missing.to_string()));
+    }
     let (reads, writes) = case.format_paths(implementation);
-    let reads = reads.expect("the caller only asks about claimed formats");
+    let reads = reads.expect("checked above");
     let api = format!("ops_lib::{}", case.version);
-    render_body(
+    Ok(render_body(
         case,
         &prefix_to_root(root, out, file),
         &api,
         &reads,
         writes.as_deref(),
-    )
+    ))
 }
 
 /// One test body, from the parts it needs. Pure, so it can be rendered for any
@@ -170,8 +190,6 @@ mod tests {
     #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
     use super::*;
-    use crate::case::Group;
-    use crate::constants;
 
     /// What the repository's implementation declares.
     fn implementation() -> Implementation {
@@ -290,34 +308,39 @@ mod tests {
         assert!(roundtrip.contains("assert_eq!("), "{roundtrip}");
     }
 
-    /// A format the implementation does not claim generates no test at all, and
-    /// a conversion is left out when either end is missing.
+    /// A format the implementation does not claim makes a case ignored instead
+    /// of generating a body. The name in the reason is whichever the case
+    /// mentions first.
     #[test]
-    fn an_unclaimed_format_is_not_generated() {
+    fn an_unsupported_format_is_ignored() {
         let root = Path::new("/repo");
         let out = root.join(constants::ACCEPTANCE_DIR);
         let markdown = case(Group::Valid, Some("markdown"), "md", None, None);
-        let json = case(Group::Valid, Some("json"), "json", None, None);
-        let tests = render_tests(
-            root,
-            &out,
-            "v0/markdown/valid.rs",
-            &[&markdown, &json],
-            &implementation(),
+        assert_eq!(
+            case_body(
+                root,
+                &out,
+                "v0/markdown/valid.rs",
+                &markdown,
+                &implementation()
+            )
+            .unwrap_err()
+            .0,
+            "md"
         );
-        assert_eq!(tests.matches("#[test]").count(), 1, "{tests}");
-        assert!(!tests.contains("markdown"), "{tests}");
-        assert!(!tests.contains("ignore"), "{tests}");
-
         let impossible = case(Group::Transform, None, "json", Some("markdown"), None);
-        let tests = render_tests(
-            root,
-            &out,
-            "v0/transform.rs",
-            &[&impossible],
-            &implementation(),
+        assert_eq!(
+            case_body(
+                root,
+                &out,
+                "v0/transform.rs",
+                &impossible,
+                &implementation()
+            )
+            .unwrap_err()
+            .0,
+            "markdown"
         );
-        assert!(tests.is_empty(), "{tests}");
     }
 
     /// Two cases with the same directory name get distinct test names.
