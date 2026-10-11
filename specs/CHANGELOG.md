@@ -1,47 +1,39 @@
 # Changelog
 
-## v0 — draft, unreleased
+All notable changes to the OPS Specifications are documented here, following
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Each version of the
+specification is a directory — [`v0/`](v0/README.md) — and a later version lands
+beside it. Only changes a document author or an implementation can observe are
+listed.
 
-OPS is a draft. No version is released, nothing is stable, and the
-model may change before the first release.
+> **Draft.** No version of OPS is released yet, so version 0 may change in any
+> way.
 
-### Changed
-
-- The specification is split into the model and its formats. `v0/model.md`
-  is now the whole standard — the fields, the rules, and conformance — and
-  each format has its own document under `v0/formats/`. A format is
-  normative for a tool that claims it; no format is required.
-- The "no level-1 heading in `notes`" rule left the model and became a
-  Markdown format rule, where its reason lives. It no longer constrains
-  documents in other formats.
-- Version 0's decisions, proposals, and test corpus moved under `v0/`,
-  alongside the model they belong to.
-- A document's `version` is now what it claims to follow, not a promise
-  about a release list: the standard asks that a declaration be findable
-  and that a document declare at most one, and leaves which versions are
-  accepted to each implementation. (RFC-013)
-- A CSV row may be no wider than its header. Extra cells had no column to
-  belong to and were read as nothing, so the row is invalid instead.
-- `formats/markdown.md` is marked draft: the profile is not settled and its
-  notes still collide with its structure.
+## [Unreleased]
 
 ### Added
 
-- First draft of the OPS Specifications version 0: the task
-  model (`title`/`status` required, everything else optional), the
-  rules, common metadata keys, formats, and conformance
-  obligations for readers, writers, and transformers.
-- Detailed CSV mapping in the Specifications: top-level fields as
-  reserved columns, metadata spread over columns, the optional
-  `metadata_` prefix for collisions, `_json`/`_string`/`_number`/`_bool`
-  type suffixes, and the optional `metadata` JSON column merged with the
-  rest.
-- Markdown metadata as `- key: value` bullets instead of HTML comments,
-  with the root's metadata in the body and only `version` and `status` in
-  the frontmatter; notes stay plain lines, so a plain `key: value` is
-  prose and only a bullet is metadata.
-- First draft of the decision records: one file per decision, numbered
-  once and living in `rfc/` while open or in `dr/` once locked (indexes
-  in each folder's `README.md`), with the CSV and Markdown metadata
-  decisions included.
-- Everything under the MIT license for now (see `LICENSE`).
+- The model: one task type, nested arbitrarily deep, in a forest of roots;
+  `title` and `status` required and the rest optional; and the rules that make a
+  document valid.
+- `metadata` as the escape hatch, with the key charset, values of six shapes,
+  one value per key, the recommended common keys, the priority scale, and
+  attachments as references that are never resolved.
+- Conformance: the core model, three levels of support, and what a reader, a
+  writer, and a transformer each owe a document.
+- The formats, one document each: JSON, YAML, JSONL, CSV, and Markdown. A format
+  is normative for a tool that claims it, and no format is required.
+- The CSV mapping: reserved columns for the fields, metadata over columns, the
+  optional `metadata_` prefix for collisions, the `_json`, `_string`, `_number`,
+  and `_bool` type suffixes, and an optional `metadata` JSON column the reader
+  merges with the columns.
+- The Markdown mapping, marked draft: headings as tasks, checkboxes as subtasks,
+  `- key: value` bullets as metadata, a note that may not contain a level-1
+  heading, and the collisions in notes it does not settle yet.
+- The portable corpus: one file-based case per rule, grouped by format, for any
+  implementation to run — semantic comparison, and a model rule carrying a case
+  in every format that can express it.
+- The decision records and the open proposals, indexed per version, with an RFC
+  proposing that the standard fixes the model and its mapping rather than the
+  bytes.
+- The specifications under the MIT license for now.

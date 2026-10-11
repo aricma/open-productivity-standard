@@ -16,8 +16,9 @@ On `main`, before a release:
    ## [x.y.z] - YYYY-MM-DD
    ```
 
-   (the top entry today reads `## [0.1.0] - unreleased`; set the date when
-   releasing).
+   Entries live under `## [Unreleased]` until then: releasing renames that
+   heading to the version and the date, and leaves a fresh `## [Unreleased]`
+   above it.
 3. The repository secret `CARGO_REGISTRY_TOKEN` holds a crates.io API token
    allowed to publish `ops-lib`.
 
