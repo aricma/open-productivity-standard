@@ -221,7 +221,7 @@ else {
 - profile
   - flags: -p --profile
   - type: string
-  - choices: essential, security, performance, acceptance, all
+  - choices: essential, security, performance, acceptance, features, all
   - desc: Test profile to run (acceptance = the portable corpus only)
 
 ```sh
@@ -234,6 +234,14 @@ essential)
     cargo test -p gen-corpus
     cargo test --doc
     ;;
+features)
+    # One cargo invocation per format. A feature set is fixed per compilation,
+    # so a subset of them can only be tested by building one.
+    for feature in json yaml jsonl csv; do
+        cargo test -q -p ops-lib --no-default-features --features "$feature"
+        echo "ops-lib passes with only $feature"
+    done
+    ;;
 acceptance) cargo test -p ops-lib --test acceptance ;;
 security) cargo test -p ops-lib --test security ;;
 performance) cargo test -p ops-lib --test performance -- --nocapture ;;
@@ -244,6 +252,7 @@ all)
     cargo test -p ops-lib --test acceptance
     cargo test -p ops-lib --test security
     cargo test -p ops-lib --test performance -- --nocapture
+    $MASK test --profile features
     ;;
 esac
 ```
@@ -260,6 +269,13 @@ switch ($profile) {
         cargo test -p gen-corpus
         cargo test --doc
     }
+    "features" {
+        # See the sh block: one cargo invocation per format.
+        foreach ($feature in "json", "yaml", "jsonl", "csv") {
+            cargo test -q -p ops-lib --no-default-features --features $feature
+            Write-Host "ops-lib passes with only $feature"
+        }
+    }
     "acceptance" { cargo test -p ops-lib --test acceptance }
     "security" { cargo test -p ops-lib --test security }
     "performance" { cargo test -p ops-lib --test performance -- --nocapture }
@@ -270,6 +286,7 @@ switch ($profile) {
         cargo test -p ops-lib --test acceptance
         cargo test -p ops-lib --test security
         cargo test -p ops-lib --test performance -- --nocapture
+        & $env:MASK test --profile features; if ($LASTEXITCODE) { exit $LASTEXITCODE }
     }
 }
 ```
