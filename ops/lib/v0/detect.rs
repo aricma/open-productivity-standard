@@ -4,10 +4,16 @@
 use crate::v0::doc::csv::read_records;
 use crate::v0::error::Error;
 use crate::v0::format::Format;
+use crate::v0::limits::{Limit, check};
 
 /// The version the document declares, or `None` when it declares none.
-/// This does not check the version against the released list.
+///
+/// This does not check the version against the released list. It parses the
+/// input to find it, so it applies the same input bound `read` does — but it
+/// is a probe, not a validation pass: a document too large to read is refused,
+/// one that merely has many tasks is still detectable.
 pub(crate) fn detect_version(format: Format, input: &str) -> Result<Option<String>, Error> {
+    check(Limit::InputBytes, input.len()).map_err(Error::Validation)?;
     Ok(match format {
         Format::Json => json_version(input)?,
         Format::Yaml => yaml_version(input)?,

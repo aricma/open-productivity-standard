@@ -30,6 +30,13 @@ All notable changes to the `ops-lib` crate are documented here, following
   not claim it: `Format::Md { heading_levels }` and `Format::md()` are gone,
   and the corpus cases for Markdown are ignored.
 
+### Fixed
+
+- `v0::detect_version` applies the input bound, like `read`. It parsed
+  whatever it was handed, so the resource guardrails could be bypassed by
+  calling it instead of `read`. It stays a probe: it bounds the input and
+  does not validate the document.
+
 ### Security
 
 - Safe Rust only: `unsafe` is denied crate-wide.

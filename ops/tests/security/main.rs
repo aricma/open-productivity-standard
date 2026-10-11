@@ -29,6 +29,36 @@ fn document_size_guard() {
     rejected(&doc, Format::Json, "input-too-large");
 }
 
+/// `detect_version` parses too, so it takes the same input bound.
+#[test]
+fn detect_version_guard() {
+    let base = r#"{"title":"t","status":"open"}"#;
+    let mut doc = String::with_capacity(MAX_INPUT_BYTES);
+    doc.push_str(base);
+    doc.push_str(&" ".repeat(MAX_INPUT_BYTES - base.len()));
+    assert!(v0::detect_version(Format::Json, &doc).is_ok());
+    doc.push(' ');
+    assert_eq!(
+        v0::detect_version(Format::Json, &doc).unwrap_err().code(),
+        "input-too-large"
+    );
+}
+
+/// Detection is a probe, not a validation pass: the input bound covers the
+/// line-by-line scan, and a document with many tasks is still detectable.
+#[test]
+fn detect_version_is_not_a_validation_pass() {
+    let lines = std::iter::repeat_n(r#"{"id":"t","title":"t","status":"open"}"#, MAX_TASKS + 1)
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(lines.len() < MAX_INPUT_BYTES, "{} bytes", lines.len());
+    assert_eq!(
+        v0::read(Format::Jsonl, &lines).unwrap_err().code(),
+        "too-many-tasks"
+    );
+    assert!(v0::detect_version(Format::Jsonl, &lines).is_ok());
+}
+
 fn jsonl_leaves(n: usize) -> String {
     (0..n)
         .map(|i| format!(r#"{{"id":"t{i}","title":"t","status":"open"}}"#))
