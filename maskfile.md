@@ -15,6 +15,9 @@ Deviations from the standard command set, kept lean on purpose:
   `tmp/bin`; cargo/rustup tools are host toolchain tools.
 - `format` covers the Rust code (`cargo fmt`); the prose has no formatter.
 - `test` has no `--watch` flag.
+- `test` has a `features` profile the standard set does not: a cargo feature
+  is fixed per compilation, so a subset of them can only be tested by building
+  one.
 - `mask release` is Unix-only; the GitHub release pipeline runs on ubuntu.
 
 ## Targets
@@ -300,7 +303,7 @@ switch ($profile) {
 - test_profile
   - flags: --test-profile
   - type: string
-  - choices: essential, security, performance, acceptance, all
+  - choices: essential, security, performance, acceptance, features, all
   - desc: Profile passed to the test step
 - fix
   - flags: -f --fix
