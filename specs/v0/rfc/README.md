@@ -32,6 +32,7 @@ or one format.
 | [RFC-028](RFC-028-attachment-values-are-urls-or-relative-paths.md) | An attachment value is a URL or a relative path |
 | [RFC-029](RFC-029-attachments-are-not-validated-or-resolved.md) | Attachments are not validated or resolved |
 | [RFC-030](RFC-030-a-title-is-one-non-empty-line.md) | A title is one non-empty line |
+| [RFC-031](RFC-031-the-standard-fixes-the-model-not-the-bytes.md) | The standard fixes the model, not the bytes |
 
 ## v0 formats
 
