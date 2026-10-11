@@ -5,12 +5,23 @@
 OPS is a draft. No version is released, nothing is stable, and the
 model may change before the first release.
 
+### Changed
+
+- The specification is split into the model and its formats. `v0/model.md`
+  is now the whole standard — the fields, the rules, and conformance — and
+  each format has its own document under `v0/formats/`. A format is
+  normative for a tool that claims it; no format is required.
+- The "no level-1 heading in `notes`" rule left the model and became a
+  Markdown format rule, where its reason lives. It no longer constrains
+  documents in other formats.
+- Version 0's decisions, proposals, and test corpus moved under `v0/`,
+  alongside the model they belong to.
+
 ### Added
 
-- First draft of the OPS Specifications version 0
-  (`open_productivity_standard_v0.md`): the task
+- First draft of the OPS Specifications version 0: the task
   model (`title`/`status` required, everything else optional), the
-  nine rules, common metadata keys, serializations, and conformance
+  rules, common metadata keys, formats, and conformance
   obligations for readers, writers, and transformers.
 - Detailed CSV mapping in the Specifications: top-level fields as
   reserved columns, metadata spread over columns, the optional

@@ -112,7 +112,7 @@ implementation cannot drift apart.
   repo.
 - [`ops/`](ops/README.md) — the reference library that proves the
   standard holds: the secondary value.
-- [`test-corpus/`](test-corpus/README.md) — the portable suite, for any
-  tool that supports OPS.
+- [`specs/v0/tests/`](specs/v0/tests/README.md) — the portable suite, for
+  any tool that supports OPS.
 
 License: MIT (see [`LICENSE`](LICENSE)).
