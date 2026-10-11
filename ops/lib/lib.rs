@@ -15,11 +15,17 @@
 //! lives in its own module, and a document is read with the module for
 //! the version it follows. [`v0`] is the only one today.
 //!
-//! ```no_run
-//! use ops_lib::v0::{self, Format};
+//! Every format is a cargo feature, so this example walks the ones the
+//! build claims: write a forest, read it back, and get the same tasks.
 //!
-//! let tasks = v0::read(Format::Json, "{\"title\": \"t\", \"status\": \"open\"}")?;
-//! let json = v0::write(Format::Json, &tasks)?;
+//! ```
+//! use ops_lib::v0::{self, Format, Status, Task};
+//!
+//! let tasks = vec![Task::new("buy milk".to_string(), Status::Open)];
+//! for &format in Format::ALL {
+//!     let document = v0::write(format, &tasks)?;
+//!     assert_eq!(v0::read(format, &document)?, tasks);
+//! }
 //! # Ok::<(), ops_lib::v0::Error>(())
 //! ```
 
