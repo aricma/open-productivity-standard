@@ -1,6 +1,9 @@
 # cargo-deny policy — minimal, grows when the dep tree does.
 [advisories]
 yanked = "deny"
+ignore = [
+  { id = "RUSTSEC-2024-0449", reason = "unsafe-libyaml via optional serde_yaml; no drop-in replacement" },
+]
 
 [bans]
 multiple-versions = "warn"
